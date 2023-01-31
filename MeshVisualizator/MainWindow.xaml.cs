@@ -7,6 +7,7 @@ using static MeshVisualizator.Mesh2D;
 using System.Windows.Input;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Markup;
 
 namespace MeshVisualizator
 {
@@ -32,10 +33,11 @@ namespace MeshVisualizator
       {
          //vcg = new ValueColorGradient(Vector3.Zero, Vector3.One);  // white -> red
          //vcg = new ValueColorGradient(new Vector3(0, 0, 1) , new Vector3(1, 0, 0)); // blue -> red
-         vcg = new ValueColorGradient(new[]{ (new Vector3(0, 0, 1), 0f),
-                                              (new Vector3(0, 1, 0), 1/3f),
-                                              (new Vector3(1, 1, 0), 2/3f),
-                                              (new Vector3(1, 0, 0), 1f)});
+         vcg = new ValueColorGradient(new[]{ new Vector3(0, 0, 1),
+                                             new Vector3(0, 1, 1),
+                                             //new Vector3(0, 1, 0),
+                                             new Vector3(1, 1, 0),
+                                             new Vector3(1, 0, 0)});
          DrawScale();
       }
       private void DrawScale()
@@ -96,8 +98,9 @@ namespace MeshVisualizator
             case MouseButtonState.Pressed:
                Point Pos = e.GetPosition(sender as IInputElement);
                Vector delta = PrevMousePos - Pos;
-               camera.Position.X -= (float)delta.X * (float)dt.TotalSeconds / 50f;
-               camera.Position.Y += (float)delta.Y * (float)dt.TotalSeconds / 50f;
+               camera.Position.X -= camera.Scale * (float)delta.X * (float)dt.TotalSeconds / 24f;
+               camera.Position.Y += camera.Scale * (float)delta.Y * (float)dt.TotalSeconds / 24f;
+
                PrevMousePos = Pos; 
                break;
             case MouseButtonState.Released:
@@ -105,12 +108,39 @@ namespace MeshVisualizator
                break;
          }
       }
+      bool MouseOnControl = false;
       private void glControl_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
       {
+         float direction = 0;
          if (e.Delta > 0)
+         {
             camera.Scale *= 1.1f;
+            direction = 1f;
+         }
          else 
+         {
             camera.Scale /= 1.1f;
+            direction = -1f;
+         }
+         if (MouseOnControl)
+         {
+            Point Pos = e.GetPosition(sender as IInputElement);
+            Vector delta = new Point((float)glControl.ActualWidth / 2f, (float)glControl.ActualHeight / 2f) - Pos;
+            delta /= Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
+            camera.Position.X -= direction * (float)delta.X * (float)dt.TotalSeconds;
+            camera.Position.Y += direction * (float)delta.Y * (float)dt.TotalSeconds;
+         }
+         mesh?.ResetShader(camera, (float)glControl.ActualWidth, (float)glControl.ActualHeight);
+      }
+      private void glControl_GotMouseCapture(object sender, MouseEventArgs e)
+      {
+         MouseOnControl = true;
+         Cursor = Cursors.Cross;
+      }
+      private void glControl_LostMouseCapture(object sender, MouseEventArgs e)
+      {
+         MouseOnControl = false;
+         Cursor = Cursors.Arrow;
       }
       #endregion
       #region UIElements
@@ -142,6 +172,7 @@ namespace MeshVisualizator
       {
          camera.Position = -Vector3.UnitZ;//new Vector3((float)glControl.ActualWidth / 2f, (float)glControl.ActualHeight / 2f, -1);
          camera.Scale = 1;
+         mesh?.ResetShader(camera, (float)glControl.ActualWidth, (float)glControl.ActualHeight);
       }
       private void B_AddElements_Click(object sender, RoutedEventArgs e)
       {

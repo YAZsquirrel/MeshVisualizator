@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using OpenTK.Mathematics;
 
@@ -34,6 +35,14 @@ namespace MeshVisualizator
 
          ColorKnots = Colors.ToList();
       }
+      public ValueColorGradient(Vector3[] colors)
+      {
+         ColorKnots = new List<(Vector3 color, float w)>();
+
+         for (int i = 0; i < colors.Length; i++)
+            ColorKnots.Add((colors[i], (float)i / (colors.Length - 1)));
+      }
+
       public void AddColorKnot(Vector3 color, float weight) 
       {
          if (weight > 1f || weight < 0f)
@@ -44,7 +53,7 @@ namespace MeshVisualizator
 
       public Vector3 GetColorByValue(float value)
       {
-         float weight = MathHelper.Lerp(MinValue, MaxValue, value);// (value - MinValue) / (MaxValue - MinValue);
+         float weight = (value - MinValue) / (MaxValue - MinValue);
          return GetColorByWeight(weight);
       }
       public Vector3 GetColorByWeight(float weight)
@@ -64,7 +73,7 @@ namespace MeshVisualizator
          return found ? new Vector3(ColorKnots[n].color + w_lerp * (ColorKnots[n + 1].color - ColorKnots[n].color)) :
                         new Vector3(ColorKnots[^2].color + w_lerp * (ColorKnots[^1].color - ColorKnots[^2].color));
       }
-      void RemoveColorKnotByNumber(int n)
+      public void RemoveColorKnotByNumber(int n)
       {
          if (ColorKnots.Count == 2)
             MessageBox.Show("You can't have less than 2 color nodes!", "Error!", MessageBoxButton.OK);

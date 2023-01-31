@@ -43,7 +43,9 @@
 											Unloaded="glControl_Unloaded"
 											MouseMove="glControl_MouseMove"
 											MouseWheel="glControl_MouseWheel"
-											Loaded="glControl_Loaded"/>
+											Loaded="glControl_Loaded"
+											MouseEnter="glControl_GotMouseCapture"
+											MouseLeave="glControl_LostMouseCapture"/>
 		<Grid x:Name="ScaleGrid" Grid.Column="1" Grid.Row="3">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*"/>

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace MeshVisualizator
 {
@@ -62,6 +63,7 @@ namespace MeshVisualizator
                                     new[] { ShaderType.FragmentShader, ShaderType.VertexShader });
          shader.LinkShaders();
          Projection = Camera2D.GetOrthoMatrix(PixelsToMeters(width), PixelsToMeters(height));
+         //Projection = Matrix4.CreatePerspectiveFieldOfView(camera.Scale * MathHelper.Pi / 4f, width / height, 0.01f, 100f);
          //Projection = Camera2D.GetOrthoMatrix(width, height);
          Transform = camera.GetTransformMatrix();
          shader.setMatrix4("projection", Projection);
@@ -89,10 +91,10 @@ namespace MeshVisualizator
       }
       private void GetMeshData(string elemsfile, string knotsfile, in ValueColorGradient vcg)
       {
-         GetVertices(knotsfile, vcg);
-         GetIndeces(elemsfile);
+         SetVertices(knotsfile, vcg);
+         SetIndeces(elemsfile);
       }
-      private void GetIndeces(string elemsfile)
+      private void SetIndeces(string elemsfile)
       {
          string[] number;
          using (StreamReader sr = new StreamReader(@elemsfile))
@@ -141,7 +143,7 @@ namespace MeshVisualizator
          indeces = indecesList.ToArray();
 
       }
-      private void GetVertices(string knotsfile, in ValueColorGradient vcg)
+      private void SetVertices(string knotsfile, in ValueColorGradient vcg)
       {
          string[] number;
          using (StreamReader sr = new StreamReader(@knotsfile))
