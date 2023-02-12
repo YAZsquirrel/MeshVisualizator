@@ -71,16 +71,16 @@
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
-				<Label x:Name="Label10" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Bottom">10</Label>
-				<Label x:Name="Label9" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">9</Label>
-				<Label x:Name="Label8" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom">8</Label>
-				<Label x:Name="Label7" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom">7</Label>
-				<Label x:Name="Label6" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom">6</Label>
-				<Label x:Name="Label5" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Bottom">5</Label>
-				<Label x:Name="Label4" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Bottom">4</Label>
-				<Label x:Name="Label3" Grid.Row="7" HorizontalAlignment="Left" VerticalAlignment="Bottom">3</Label>
-				<Label x:Name="Label2" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Bottom">2</Label>
-				<Label x:Name="Label1" Grid.Row="9" HorizontalAlignment="Left" VerticalAlignment="Bottom">1</Label>
+				<Label x:Name="Label10" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center">10</Label>
+				<Label x:Name="Label9" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center">9</Label>
+				<Label x:Name="Label8" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Center">8</Label>
+				<Label x:Name="Label7" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Center">7</Label>
+				<Label x:Name="Label6" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Center">6</Label>
+				<Label x:Name="Label5" Grid.Row="5" HorizontalAlignment="Left" VerticalAlignment="Center">5</Label>
+				<Label x:Name="Label4" Grid.Row="6" HorizontalAlignment="Left" VerticalAlignment="Center">4</Label>
+				<Label x:Name="Label3" Grid.Row="7" HorizontalAlignment="Left" VerticalAlignment="Center">3</Label>
+				<Label x:Name="Label2" Grid.Row="8" HorizontalAlignment="Left" VerticalAlignment="Center">2</Label>
+				<Label x:Name="Label1" Grid.Row="9" HorizontalAlignment="Left" VerticalAlignment="Center">1</Label>
 			</Grid>
 		</Grid>
 
@@ -92,7 +92,8 @@
 				<!--<StatusBar Grid.Column="3" Grid.Row="5"/>-->
 
 		<CheckBox Margin="5,5,5,5" x:Name="CB_ShowGrid" Content="Show Grid?" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Stretch" Checked="CB_ShowGrid_Checked" Unchecked="CB_ShowGrid_Unchecked"/>
-		<Button Margin="5,5,5,5" x:Name="B_SetToOrigin" Content="Return to origin" Grid.Column="3" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Center" Click="B_SetToOrigin_Click"/>
+		<CheckBox Margin="5,5,5,5" Visibility="Hidden" x:Name="CB_Logarithmic" Content="Logarithmic scale?" Grid.Column="2" Grid.ColumnSpan="1" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Stretch" Checked="CB_Logarithmic_Checked" Unchecked="CB_Logarithmic_Unchecked"/>
+		<Button Margin="5,5,5,5" x:Name="B_SetToOrigin" Content="Return to origin" Grid.Column="3" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Right" Click="B_SetToOrigin_Click"/>
 		<Button Margin="5,5,5,5"  x:Name="B_Recompile" Content="Recompile shaders" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Click="B_Recompile_Click"/>
 		<Button Margin="5,5,5,5"  x:Name="B_Redraw" Content="(re)Draw" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="6" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Click="B_Redraw_Click" />
 		<ScrollViewer Grid.Row="7" Grid.ColumnSpan="4" Background="#FFf5f5f5" Margin="2,0,2,2">

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows;
-using Microsoft.Win32;
-using OpenTK.Graphics.OpenGL4;
 
 namespace MeshVisualizator
 {

@@ -8,6 +8,8 @@ using System.Windows.Input;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Markup;
+using System.Linq;
+using System.Diagnostics;
 
 namespace MeshVisualizator
 {
@@ -48,12 +50,21 @@ namespace MeshVisualizator
             Color color = Color.FromRgb((byte)MathF.Round(ColorKnots.color.X * 255),
                                         (byte)MathF.Round(ColorKnots.color.Y * 255),
                                         (byte)MathF.Round(ColorKnots.color.Z * 255));
-            gradCollection.Add(new GradientStop(color, ColorKnots.w));
+            gradCollection.Add(new GradientStop(color, 1f - ColorKnots.w));
          }
-
          R_Scale.Fill = new LinearGradientBrush(gradCollection, 90);
-      }
 
+         Label1.Content = $"{vcg.GetValueByWeight(0f)}";
+         Label2.Content = $"{vcg.GetValueByWeight(1f / 9f)}";
+         Label3.Content = $"{vcg.GetValueByWeight(2f / 9f)}";
+         Label4.Content = $"{vcg.GetValueByWeight(3f / 9f)}";
+         Label5.Content = $"{vcg.GetValueByWeight(4f / 9f)}";
+         Label6.Content = $"{vcg.GetValueByWeight(5f / 9f)}";
+         Label7.Content = $"{vcg.GetValueByWeight(6f / 9f)}";
+         Label8.Content = $"{vcg.GetValueByWeight(7f / 9f)}";
+         Label9.Content = $"{vcg.GetValueByWeight(8f / 9f)}";
+         Label10.Content = $"{vcg.GetValueByWeight(1f)}";
+      }
       #endregion
       #region glContol
       Color4 color = new Color4(0.9f,0.9f,0.9f,1f);
@@ -71,6 +82,8 @@ namespace MeshVisualizator
          camera.Position.Y = (float)glControl.ActualHeight / 2f;
          camera.Position = -Vector3.UnitZ;
       }
+      double secTicks = 0;
+      string fps = ""; 
       private void OpenTkControl_OnRender(TimeSpan delta)
       {
          dt = delta;
@@ -78,7 +91,19 @@ namespace MeshVisualizator
          GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
          mesh?.DrawMesh(camera);
-         Title = camera?.Position.ToString() + " " + camera?.Scale.ToString();
+         Title = $"Cam pos: {-camera?.Position}, Scale:{camera?.Scale}, " +
+                 $"Mouse: px:({PrevMousePos.X}, {glControl.ActualHeight - PrevMousePos.Y}) " +
+                 $"m:({-camera?.Position.X + 1f / camera?.Scale * PixelsToMeters((float)(PrevMousePos.X - glControl.ActualWidth/2f))}, " +
+                 $"{-camera?.Position.Y + 1f / camera?.Scale * PixelsToMeters((float)(glControl.ActualHeight/2f - PrevMousePos.Y))}) " +
+                 $"relative:({PrevMousePos.X / glControl.ActualWidth}, {1f - PrevMousePos.Y / glControl.ActualHeight}) " + fps;
+
+         if (secTicks > 0.5f)
+         {
+            secTicks = 0f;
+            fps = $"FPS: {Math.Round(1f / delta.TotalSeconds)}";
+         }
+         secTicks += delta.TotalSeconds;
+
          GL.Finish();
       }
       private void glControl_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -91,6 +116,7 @@ namespace MeshVisualizator
          mesh?.RemoveMesh();
       }
       Point PrevMousePos;
+      const float cameraSpeed = 100f;
       private void glControl_MouseMove(object sender, MouseEventArgs e)
       {
          switch (e.LeftButton)
@@ -98,8 +124,8 @@ namespace MeshVisualizator
             case MouseButtonState.Pressed:
                Point Pos = e.GetPosition(sender as IInputElement);
                Vector delta = PrevMousePos - Pos;
-               camera.Position.X -= camera.Scale * (float)delta.X * (float)dt.TotalSeconds / 24f;
-               camera.Position.Y += camera.Scale * (float)delta.Y * (float)dt.TotalSeconds / 24f;
+               camera.Position.X -=  PixelsToMeters((float)delta.X);
+               camera.Position.Y +=  PixelsToMeters((float)delta.Y);
 
                PrevMousePos = Pos; 
                break;
@@ -112,23 +138,27 @@ namespace MeshVisualizator
       private void glControl_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
       {
          float direction = 0;
-         if (e.Delta > 0)
+         const float scaleFactor = 2f;
+
+         if (e.Delta < 0)
          {
-            camera.Scale *= 1.1f;
+            camera.Scale *= scaleFactor;
+            //direction = cameraSpeed;
             direction = 1f;
          }
          else 
          {
-            camera.Scale /= 1.1f;
+            camera.Scale /= scaleFactor;
+            //direction = -cameraSpeed;
             direction = -1f;
          }
          if (MouseOnControl)
          {
             Point Pos = e.GetPosition(sender as IInputElement);
-            Vector delta = new Point((float)glControl.ActualWidth / 2f, (float)glControl.ActualHeight / 2f) - Pos;
-            delta /= Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
-            camera.Position.X -= direction * (float)delta.X * (float)dt.TotalSeconds;
-            camera.Position.Y += direction * (float)delta.Y * (float)dt.TotalSeconds;
+            Vector delta = new Vector(Pos.X - (float)glControl.ActualWidth / 2f, (float)glControl.ActualHeight / 2f - Pos.Y);
+
+            camera.Position.X -= direction * PixelsToMeters((float)delta.X) / scaleFactor;
+            camera.Position.Y -= direction * PixelsToMeters((float)delta.Y) / scaleFactor;
          }
          mesh?.ResetShader(camera, (float)glControl.ActualWidth, (float)glControl.ActualHeight);
       }
@@ -156,7 +186,18 @@ namespace MeshVisualizator
             var file = files[0];
             L_AddVertices.Content = file;
          }
-         DrawMesh();
+         try
+         {
+            DrawSolution();
+            DrawScale();
+         }
+         catch 
+         {
+            mesh?.RemoveMesh();
+            mesh = null;
+            MessageBox.Show($"File {L_AddVertices.Content} does not satisfy the format or is corrupted!");
+         }
+
       }
       private void L_AddElements_Drop(object sender, DragEventArgs e)
       {
@@ -166,11 +207,22 @@ namespace MeshVisualizator
             var file = files[0];
             L_AddElements.Content = file;
          }
-         DrawMesh();
+         try
+         {
+            DrawSolution();
+            DrawScale();
+         }
+         catch
+         {
+            mesh?.RemoveMesh();
+            mesh = null;
+            MessageBox.Show($"File {L_AddElements.Content} does not satisfy the format or is corrupted!");
+         }
       }
       private void B_SetToOrigin_Click(object sender, RoutedEventArgs e)
       {
          camera.Position = -Vector3.UnitZ;//new Vector3((float)glControl.ActualWidth / 2f, (float)glControl.ActualHeight / 2f, -1);
+         camera.Position = new Vector3(-PixelsToMeters((float)glControl.ActualWidth / 2f), -PixelsToMeters((float)glControl.ActualHeight / 2f), -1);
          camera.Scale = 1;
          mesh?.ResetShader(camera, (float)glControl.ActualWidth, (float)glControl.ActualHeight);
       }
@@ -181,6 +233,17 @@ namespace MeshVisualizator
          open.ShowDialog();
          string filename = open.FileName;
          L_AddElements.Content = filename;
+         try
+         {
+            DrawSolution();
+            DrawScale();
+         }
+         catch
+         {
+            mesh?.RemoveMesh();
+            mesh = null;
+            MessageBox.Show($"File {filename} does not satisfy the format or is corrupted!");
+         }
       }
       private void B_AddVertices_Click(object sender, RoutedEventArgs e)
       {
@@ -189,6 +252,17 @@ namespace MeshVisualizator
          open.ShowDialog();
          string filename = open.FileName;
          L_AddVertices.Content = filename;
+         try
+         {
+            DrawSolution();
+            DrawScale();
+         }
+         catch
+         {
+            mesh?.RemoveMesh();
+            mesh = null;
+            MessageBox.Show($"File {filename} does not satisfy the format or is corrupted!");
+         }
       }
       private void B_Recompile_Click(object sender, RoutedEventArgs e)
       {
@@ -196,7 +270,8 @@ namespace MeshVisualizator
       }
       private void B_Redraw_Click(object sender, RoutedEventArgs e)
       {
-         DrawMesh();
+         DrawSolution();
+         DrawScale();
       }
       private void CB_ShowGrid_Checked(object sender, RoutedEventArgs e)
       {
@@ -206,8 +281,18 @@ namespace MeshVisualizator
       {
          GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
       }
+      private void CB_Logarithmic_Checked(object sender, RoutedEventArgs e)
+      {
+         vcg.SetIsLogarithmic = true;
+         DrawScale();
+      }
+      private void CB_Logarithmic_Unchecked(object sender, RoutedEventArgs e)
+      {
+         vcg.SetIsLogarithmic = false;
+         DrawScale();
+      }
       #endregion
-      public void DrawMesh()
+      public void DrawSolution()
       {
          mesh?.RemoveMesh();
          if (File.Exists(L_AddElements.Content as string) && File.Exists(L_AddVertices.Content as string))
@@ -216,19 +301,10 @@ namespace MeshVisualizator
                               meshType,
                               (float)glControl.ActualWidth,
                               (float)glControl.ActualHeight, vcg, camera);
-         else if (L_AddElements.Content as string != "File" || L_AddVertices.Content as string != "File")
+         else if (L_AddElements.Content as string != "File" && L_AddVertices.Content as string != "File")
             MessageBox.Show($"File \"{L_AddElements.Content}\" or \"{L_AddVertices.Content}\" does not exist!");
 
-         Label1.Content = $"{vcg.MinValue}";
-         Label2.Content = $"{vcg.MinValue + (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label3.Content = $"{vcg.MinValue + 2f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label4.Content = $"{vcg.MinValue + 3f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label5.Content = $"{vcg.MinValue + 4f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label6.Content = $"{vcg.MinValue + 5f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label7.Content = $"{vcg.MinValue + 6f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label8.Content = $"{vcg.MinValue + 7f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label9.Content = $"{vcg.MinValue + 8f * (vcg.MaxValue - vcg.MinValue) / 10f}";
-         Label10.Content = $"{vcg.MaxValue}";
       }
+
    }
 }

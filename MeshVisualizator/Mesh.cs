@@ -18,7 +18,8 @@ namespace MeshVisualizator
    }
    public class Mesh2D
    {
-      public static float PixelsToMeters(float pixels) => pixels * 2.54f / 9600f;
+      private const float inchesInCm = 2.54f;
+      public static float PixelsToMeters(float pixels) => pixels * inchesInCm / 9600f;
       public static float MetersToPixels(float meters) => meters / PixelsToMeters(1);
       public enum MeshType { Quadrilateral, Triangle };
 
