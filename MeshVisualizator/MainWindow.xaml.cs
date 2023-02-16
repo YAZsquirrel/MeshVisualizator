@@ -7,16 +7,13 @@ using static MeshVisualizator.Mesh2D;
 using System.Windows.Input;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Markup;
-using System.Linq;
-using System.Diagnostics;
 
 namespace MeshVisualizator
 {
    public partial class MainWindow : Window
    {
       Mesh2D? mesh;
-      ValueColorGradient vcg;
+      public ValueColorGradient vcg;
       Camera2D camera;
       MeshType meshType = MeshType.Quadrilateral;
       public MainWindow()
@@ -40,30 +37,37 @@ namespace MeshVisualizator
                                              //new Vector3(0, 1, 0),
                                              new Vector3(1, 1, 0),
                                              new Vector3(1, 0, 0)});
+         vcg.Sort();
+         DataContext = vcg;
          DrawScale();
+
       }
-      private void DrawScale()
+
+      public void DrawScale()
       {
          var gradCollection = new GradientStopCollection();
-         foreach (var ColorKnots in vcg.ColorKnots)
+
+         foreach (var ColorKnot in vcg.ColorKnots)
          {
-            Color color = Color.FromRgb((byte)MathF.Round(ColorKnots.color.X * 255),
-                                        (byte)MathF.Round(ColorKnots.color.Y * 255),
-                                        (byte)MathF.Round(ColorKnots.color.Z * 255));
-            gradCollection.Add(new GradientStop(color, 1f - ColorKnots.w));
+            Vector3 vcolor = ColorKnot.GetColorVector();
+            Color color = Color.FromRgb((byte)MathF.Round(vcolor.X * 255),
+                                        (byte)MathF.Round(vcolor.Y * 255),
+                                        (byte)MathF.Round(vcolor.Z * 255));
+            gradCollection.Add(new GradientStop(color, 1f - ColorKnot.Weight));
+            
          }
          R_Scale.Fill = new LinearGradientBrush(gradCollection, 90);
 
-         Label1.Content = $"{vcg.GetValueByWeight(0f)}";
-         Label2.Content = $"{vcg.GetValueByWeight(1f / 9f)}";
-         Label3.Content = $"{vcg.GetValueByWeight(2f / 9f)}";
-         Label4.Content = $"{vcg.GetValueByWeight(3f / 9f)}";
-         Label5.Content = $"{vcg.GetValueByWeight(4f / 9f)}";
-         Label6.Content = $"{vcg.GetValueByWeight(5f / 9f)}";
-         Label7.Content = $"{vcg.GetValueByWeight(6f / 9f)}";
-         Label8.Content = $"{vcg.GetValueByWeight(7f / 9f)}";
-         Label9.Content = $"{vcg.GetValueByWeight(8f / 9f)}";
-         Label10.Content = $"{vcg.GetValueByWeight(1f)}";
+         TBox_1.Text = $"{vcg.GetValueByWeight(0f)}";
+         TBox_2.Text = $"{vcg.GetValueByWeight(1f / 9f)}";
+         TBox_3.Text = $"{vcg.GetValueByWeight(2f / 9f)}";
+         TBox_4.Text = $"{vcg.GetValueByWeight(3f / 9f)}";
+         TBox_5.Text = $"{vcg.GetValueByWeight(4f / 9f)}";
+         TBox_6.Text = $"{vcg.GetValueByWeight(5f / 9f)}";
+         TBox_7.Text = $"{vcg.GetValueByWeight(6f / 9f)}";
+         TBox_8.Text = $"{vcg.GetValueByWeight(7f / 9f)}";
+         TBox_9.Text = $"{vcg.GetValueByWeight(8f / 9f)}";
+         TBox_10.Text = $"{vcg.GetValueByWeight(1f)}";
       }
       #endregion
       #region glContol
@@ -295,6 +299,7 @@ namespace MeshVisualizator
       public void DrawSolution()
       {
          mesh?.RemoveMesh();
+         mesh = null;
          if (File.Exists(L_AddElements.Content as string) && File.Exists(L_AddVertices.Content as string))
             mesh = new Mesh2D(L_AddElements.Content as string,
                               L_AddVertices.Content as string,
@@ -302,9 +307,23 @@ namespace MeshVisualizator
                               (float)glControl.ActualWidth,
                               (float)glControl.ActualHeight, vcg, camera);
          else if (L_AddElements.Content as string != "File" && L_AddVertices.Content as string != "File")
-            MessageBox.Show($"File \"{L_AddElements.Content}\" or \"{L_AddVertices.Content}\" does not exist!");
+            if (!File.Exists(L_AddElements.Content as string))
+               MessageBox.Show($"File \"{L_AddElements.Content}\" does not exist!");
+            else if (!File.Exists(L_AddVertices.Content as string))
+               MessageBox.Show($"File \"{L_AddVertices.Content}\" does not exist!");
 
       }
 
+      private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
+      {
+
+      }
+
+      private void B_AddNewColorKnot_Click(object sender, RoutedEventArgs e)
+      {
+         vcg.AddNewColorKnot();
+         DrawScale();
+         DrawSolution();
+      }
    }
 }

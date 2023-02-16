@@ -1,0 +1,86 @@
+﻿<UserControl x:Class="MeshVisualizator.ScaleColorsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MeshVisualizator"
+             mc:Ignorable="d" Height="auto" Width="auto" MinWidth="200" Loaded="UserControl_Loaded">
+
+	<Border Background="Wheat" BorderThickness="5" Width="auto">
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="auto"/>
+				<RowDefinition Height="auto"/>
+				<RowDefinition Height="auto"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="auto"/>
+				<ColumnDefinition Width="auto" MinWidth="50"/>
+				<ColumnDefinition Width="auto"/>
+				<ColumnDefinition/>
+			</Grid.ColumnDefinitions>
+			<Rectangle Fill="{Binding RectColor}" Height="88" Width="88" Margin="4" Grid.RowSpan="3"/>
+
+			<StackPanel Margin="1" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" >
+				<TextBlock FontSize="24" FontFamily="Consolas" Grid.Column="0" Background="Transparent">#</TextBlock>
+				<TextBox FontSize="24" Padding="0,-1,0,0" x:Name="TBox_ColorCode"
+                       Background="FloralWhite"
+                       FontFamily="Consolas"
+                       TextAlignment="Center" AcceptsReturn="False"
+                       Text="{Binding ColorCode}" 
+							  LostFocus="TBox_ColorCode_LostFocus" />
+			</StackPanel>
+
+			<StackPanel Margin="1,1,1,1" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
+				<StackPanel Orientation="Vertical">
+					<StackPanel Orientation="Horizontal">
+						<TextBlock FontSize="18" FontFamily="Consolas" Grid.Column="0" Background="Transparent">R</TextBlock>
+						<TextBox FontSize="16" Margin="5,0,0,0"
+                           FontFamily="Consolas" 
+                           Grid.Column="1" 
+                           TextAlignment="Center" AcceptsReturn="False"
+                           Text="{Binding R}"/>
+					</StackPanel>
+
+					<StackPanel Orientation="Horizontal">
+						<TextBlock FontSize="18" FontFamily="Consolas" Grid.Column="0" Background="Transparent">G</TextBlock>
+						<TextBox FontSize="16" Margin="5,0,0,0"
+                           FontFamily="Consolas" 
+                           Grid.Column="1" 
+                           TextAlignment="Center" AcceptsReturn="False"
+                           Text="{Binding G}"/>
+					</StackPanel>
+
+					<StackPanel Orientation="Horizontal">
+						<TextBlock FontSize="18" FontFamily="Consolas" Grid.Column="0" Background="Transparent" >B</TextBlock>
+						<TextBox FontSize="16" Margin="5,0,0,0"
+                          FontFamily="Consolas" 
+                          Grid.Column="1" 
+                          TextAlignment="Center" AcceptsReturn="False"
+                          Text="{Binding B}" />
+					</StackPanel>
+				</StackPanel>
+			</StackPanel>
+
+			<StackPanel Grid.Row="1" Grid.Column="2" Margin="4,0,0,0" HorizontalAlignment="Left">
+				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+					<TextBlock FontSize="18" FontFamily="Consolas" Grid.Column="0" Background="Transparent" >W</TextBlock>
+					<TextBox x:Name="TBox_Weight" FontSize="16" Margin="5,0,0,0"
+								  FontFamily="Consolas" 
+								  Grid.Column="1" 
+								  TextAlignment="Center" AcceptsReturn="False"
+								  Text="{Binding Weight}"/>
+				</StackPanel>
+				<Slider Maximum="1" Value="{Binding Weight}" HorizontalAlignment="Left" Width="100" 
+						  ValueChanged="Slider_ValueChanged" PreviewMouseUp="Slider_PreviewMouseUp" 
+						   />
+			</StackPanel>
+
+
+			<Button x:Name="B_Remove" HorizontalAlignment="Right" Margin="3" Grid.Column="3" Grid.Row="0" Background="IndianRed" FontSize="16" Content="🞪" Height="25" Width="25" Click="B_Remove_Click"/>
+			<Button x:Name="B_MoveUp" IsEnabled="{Binding CanGoUp}" HorizontalAlignment="Right" Margin="3" Grid.Column="3" Grid.Row="1" FontSize="14" Content="🡩" Height="25" Width="25" Click="B_MoveUp_Click"/>
+			<Button x:Name="B_MoveDown" IsEnabled="{Binding CanGoDown}" HorizontalAlignment="Right" Margin="3" Grid.Column="3" Grid.Row="2" FontSize="14" Content="🡫" Height="25" Width="25" Click="B_MoveDown_Click"/>
+
+		</Grid>
+	</Border>
+</UserControl>
