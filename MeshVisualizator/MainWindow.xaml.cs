@@ -42,7 +42,6 @@ namespace MeshVisualizator
          DrawScale();
 
       }
-
       public void DrawScale()
       {
          var gradCollection = new GradientStopCollection();
@@ -295,6 +294,12 @@ namespace MeshVisualizator
          vcg.SetIsLogarithmic = false;
          DrawScale();
       }
+      private void B_AddNewColorKnot_Click(object sender, RoutedEventArgs e)
+      {
+         vcg.AddNewColorKnot();
+         DrawScale();
+         DrawSolution();
+      }
       #endregion
       public void DrawSolution()
       {
@@ -312,18 +317,6 @@ namespace MeshVisualizator
             else if (!File.Exists(L_AddVertices.Content as string))
                MessageBox.Show($"File \"{L_AddVertices.Content}\" does not exist!");
 
-      }
-
-      private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
-      {
-
-      }
-
-      private void B_AddNewColorKnot_Click(object sender, RoutedEventArgs e)
-      {
-         vcg.AddNewColorKnot();
-         DrawScale();
-         DrawSolution();
       }
    }
 }

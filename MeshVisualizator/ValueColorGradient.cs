@@ -103,6 +103,8 @@ namespace MeshVisualizator
       { get => weight;
          set
          {
+            if (value < 0f || value > 1f)
+               return;
             weight = value;
             OnPropertyChanged();
 
@@ -262,15 +264,17 @@ namespace MeshVisualizator
 
          int n = -1;
          bool found = false;
-         for (int i = colorKnots.Count - 2; i > 0 && !found; i--)
-            if (found = colorKnots[i].Weight > weight) 
+
+         for (int i = 1; i < colorKnots.Count - 1 && !found; i++)
+            if (found = colorKnots[i].Weight < weight) 
                n = i;
+         
+         float s = found ? colorKnots[n].Weight - colorKnots[n - 1].Weight:
+                           colorKnots[^1].Weight - colorKnots[^2].Weight;
+         float w_lerp = (weight - (found ? colorKnots[n - 1].Weight : colorKnots[^2].Weight)) / s;
 
-         float w_lerp = found ? MathHelper.Lerp(colorKnots[n + 1].Weight, colorKnots[n].Weight, weight) : 
-                                MathHelper.Lerp(colorKnots[0].Weight, colorKnots[1].Weight, weight);
-
-         return found ? new Vector3(colorKnots[n + 1].GetColorVector() + w_lerp * (colorKnots[n].GetColorVector() - colorKnots[n].GetColorVector())) :
-                        new Vector3(colorKnots[0].GetColorVector() + w_lerp * (colorKnots[1].GetColorVector() - colorKnots[^2].GetColorVector()));
+         return found ? (1f - w_lerp ) * colorKnots[n - 1].GetColorVector() + w_lerp * colorKnots[n].GetColorVector() :
+                        (1f -  w_lerp) * colorKnots[^2].GetColorVector() + w_lerp * colorKnots[^1].GetColorVector();
       }
 
       public void RemoveColorKnotByNumber(int n)

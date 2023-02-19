@@ -87,7 +87,7 @@
 		</Grid>
 
 		<Border Background="LightSlateGray" BorderThickness="2" Margin="10, 10, 10, 10" Grid.Column="3" Grid.Row="3">
-			<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded">
+			<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
 				<ItemsControl x:Name="IC_Colors" Visibility="Visible" Background="#bababa" ItemsSource="{Binding ColorKnots}">
 					<ItemsControl.ItemTemplate>
 						<DataTemplate>
