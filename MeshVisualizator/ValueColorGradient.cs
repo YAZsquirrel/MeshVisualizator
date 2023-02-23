@@ -9,20 +9,24 @@ using System.Windows;
 using System.Text;
 using System.Windows.Media;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json.Schema;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace MeshVisualizator
 {
    public class ColorKnot : INotifyPropertyChanged // model
    {
-      private static readonly Regex _regexHex = new Regex(@"\b[\da-fA-F]+\b");
+      private static readonly Regex _regexHex = new Regex(@"[\da-fA-F]{6}");
       private string colorCode = "FFFFFF";
-      public bool CanGoDown { get => weight > 0f;}
-      public bool CanGoUp { get => weight < 1f;}
-      public string ColorCode 
+      public bool CanGoDown { get; set; }
+      public bool CanGoUp { get; set; }
+
+      public string ColorCode
       { get => colorCode; 
         set 
         {
-           if (value.Length != 6 || !_regexHex.IsMatch(value))
+           if (!_regexHex.IsMatch(value))
               return;
            colorCode = value;
            OnPropertyChanged();
@@ -82,9 +86,6 @@ namespace MeshVisualizator
             if (!uint.TryParse(value, out uint val))
                return;
 
-            if (val > 255)
-               return;
-
             StringBuilder sb = new(colorCode);
             colorCode = sb
                      .Remove(4, 2)
@@ -108,7 +109,7 @@ namespace MeshVisualizator
             weight = value;
             OnPropertyChanged();
 
-            // TODO: -> Update mesh, Update scale
+            // TODO: -> Update mesh
         }}
       public Brush RectColor 
       { 
@@ -127,12 +128,7 @@ namespace MeshVisualizator
          PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
       public Vector3 GetColorVector()
       {
-         int[] rgb = new int[3] { 0, 0, 0 };
-         bool success = true;
-         for (int i = 0; i < 3 && success; i++)
-            success = int.TryParse(ColorCode[i * 2].ToString() + ColorCode[i * 2 + 1].ToString(), NumberStyles.AllowHexSpecifier, null, out rgb[i]);
-         
-         return new Vector3(rgb[0] / 255f, rgb[1] / 255f, rgb[2] / 255f);
+         return new Vector3(int.Parse(R) / 255f, int.Parse(G) / 255f, int.Parse(B) / 255f);
       }
       public static string GetColorCodeByColorVector(Vector3 color)
       {
@@ -142,11 +138,7 @@ namespace MeshVisualizator
       }
       public static bool IsStringAColor(string colorstring)
       {
-         bool success = colorstring.Length == 6;
-         for (int i = 0; i < 3 && success; i++)
-            success = int.TryParse(new string(new char[] { colorstring[i * 2], colorstring[i * 2 + 1] }), NumberStyles.AllowHexSpecifier, null, out _);
-
-         return success;
+         return _regexHex.IsMatch(colorstring);
       }
    }
 
@@ -192,6 +184,7 @@ namespace MeshVisualizator
          MaxValue = maxValue;
          MinValue = minValue;
          SetIsLogarithmic = isScaleLogarithmic;
+         Sort();
 
       }
       public ValueColorGradient((Vector3 color, float w)[] Colors, bool isScaleLogarithmic = false)
@@ -205,7 +198,7 @@ namespace MeshVisualizator
             colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w });
 
          SetIsLogarithmic = isScaleLogarithmic;
-
+         Sort();
       }
       public ValueColorGradient(Vector3[] colors, bool isScaleLogarithmic = false)
       {
@@ -216,14 +209,16 @@ namespace MeshVisualizator
             colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color), Weight = (float)id++ / (colors.Length - 1f) });
 
          SetIsLogarithmic = isScaleLogarithmic;
-
+         Sort();
       }
       public ValueColorGradient(bool isScaleLogarithmic = false)
       {
          colorKnots = new ObservableCollection<ColorKnot>
          {
-            new ColorKnot { ColorCode = "FFFFFF", Weight = 0.5f }
+            new ColorKnot { ColorCode = "FFFFFF", Weight = 1f },
+            new ColorKnot { ColorCode = "000000", Weight = 0f },
          };
+         Sort();
       }
       public void AddColorKnot(Vector3 color, float weight) 
       {
@@ -276,7 +271,6 @@ namespace MeshVisualizator
          return found ? (1f - w_lerp ) * colorKnots[n - 1].GetColorVector() + w_lerp * colorKnots[n].GetColorVector() :
                         (1f -  w_lerp) * colorKnots[^2].GetColorVector() + w_lerp * colorKnots[^1].GetColorVector();
       }
-
       public void RemoveColorKnotByNumber(int n)
       {
          if (colorKnots.Count == 2)
@@ -284,7 +278,6 @@ namespace MeshVisualizator
          else
             colorKnots.Remove(colorKnots[n]);
       }
-
       public void RemoveColorKnot(ColorKnot colorKnot)
       {
          if (colorKnots.Count == 2)
@@ -292,29 +285,30 @@ namespace MeshVisualizator
          else
             colorKnots.Remove(colorKnot);
       }
-
       public void AddNewColorKnot()
       {
-         colorKnots.Add(new ColorKnot { ColorCode = "ffffff", Weight = 0.5f });
+         colorKnots.Add(new ColorKnot { ColorCode = "f0f0f0", Weight = 0.5f });
          Sort();
       }
-
       internal void Sort()
       {
          var sortedCKs = colorKnots.OrderByDescending(x => x.Weight).ToArray();
          colorKnots.Clear();
          foreach (var ck in sortedCKs)
+         {
+            ck.CanGoDown = ck.CanGoUp = true;
             colorKnots.Add(ck);
+         }
+         sortedCKs.First().CanGoUp = false;
+         sortedCKs.Last().CanGoDown = false;
       }
-
       internal void MoveUp(ColorKnot colorKnot)
       {
          int i = Array.FindIndex(ColorKnots.ToArray(), x => x.Equals(colorKnot));
-         if (i >= 0)
+         if (i >= 1)
             (colorKnots[i - 1].Weight, colorKnots[i].Weight) = (colorKnots[i].Weight, colorKnots[i - 1].Weight);
          Sort();
       }
-
       internal void MoveDown(ColorKnot colorKnot)
       {
          int i = Array.FindIndex(ColorKnots.ToArray(), x => x.Equals(colorKnot));
@@ -322,7 +316,58 @@ namespace MeshVisualizator
             (colorKnots[i + 1].Weight, colorKnots[i].Weight) = (colorKnots[i].Weight, colorKnots[i + 1].Weight);
          Sort();
       }
+      public void SetPalette(string palette_file)
+      {
+         if (!File.Exists(palette_file))
+            return;
 
+         using var palette_reader = new StreamReader(palette_file);
+         if (!File.Exists(@"../../../Palette_schema.json"))
+            throw new Exception($"Couldn't find schema \"Palette_schema.json\"");
 
+         using var schema_reader = new StreamReader(@"../../../Palette_schema.json");
+
+         try
+         {
+            JArray array = JArray.Parse(palette_reader.ReadToEnd());
+            JSchema schema = JSchema.Parse(schema_reader.ReadToEnd());
+
+            if (!array.IsValid(schema))
+            {
+               MessageBox.Show($"File {palette_file} is corrupted!", "Error!", MessageBoxButton.OK);
+               return;
+            }
+
+            ColorKnot[] cks = new ColorKnot[array.Count];
+            for (int i = 0; i < cks.Length; i++)
+            {
+               cks[i] = array[i].ToObject<ColorKnot>() ?? new ColorKnot();
+            }
+
+            colorKnots.Clear();
+            foreach (var ck in cks)
+               colorKnots.Add(ck);
+
+            Sort();
+         }
+         catch 
+         {
+            MessageBox.Show($"File {palette_file} is corrupted!", "Error!", MessageBoxButton.OK);
+            return;
+         }
+      }
+
+      public void SavePalette(string palette_file)
+      {
+         if (palette_file == "")
+            return;
+         StringBuilder sb = new("[\n");
+
+         foreach (var ck in colorKnots)
+            sb.AppendLine($"{{\n\t\"ColorKnots\" : \"{ck.ColorCode}\",\n\t\"Weight\" : { ck.Weight.ToString(CultureInfo.InvariantCulture)} }},");
+         sb.Append("]");
+
+         File.WriteAllText(palette_file, sb.ToString());
+      }
    }
 }

@@ -1,0 +1,22 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "title": "JSON Schema for scale palette",
+
+   "type": "array",
+   "items": {
+      "properties": {
+         "ColorCode": {
+            "type": "string",
+            "pattern": "[\\da-fA-F]{6}"
+         },
+
+         "Weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+         }
+      },
+      "required": [ "ColorCode", "Weight" ]
+   }
+}
+

@@ -28,23 +28,23 @@
                        FontFamily="Consolas"
                        TextAlignment="Center" AcceptsReturn="False"
                        Text="{Binding ColorCode}" 
-							  LostFocus="TBox_ColorCode_LostFocus" />
+							  LostFocus="TBox_ColorCode_LostFocus"/>
 			</StackPanel>
 
 			<StackPanel Margin="1,1,1,1" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
 				<StackPanel Orientation="Vertical">
 					<StackPanel Orientation="Horizontal">
 						<TextBlock FontSize="18" FontFamily="Consolas" Grid.Column="0" Background="Transparent">R</TextBlock>
-						<TextBox FontSize="16" Margin="5,0,0,0"
+						<TextBox FontSize="16" Margin="5,0,0,0" x:Name="TBox_R"
                            FontFamily="Consolas" 
                            Grid.Column="1" 
-                           TextAlignment="Center" AcceptsReturn="False"
+                           TextAlignment="Center" AcceptsReturn="False" 
                            Text="{Binding R}"/>
 					</StackPanel>
 
 					<StackPanel Orientation="Horizontal">
 						<TextBlock FontSize="18" FontFamily="Consolas" Grid.Column="0" Background="Transparent">G</TextBlock>
-						<TextBox FontSize="16" Margin="5,0,0,0"
+						<TextBox FontSize="16" Margin="5,0,0,0" 
                            FontFamily="Consolas" 
                            Grid.Column="1" 
                            TextAlignment="Center" AcceptsReturn="False"
@@ -57,7 +57,7 @@
                           FontFamily="Consolas" 
                           Grid.Column="1" 
                           TextAlignment="Center" AcceptsReturn="False"
-                          Text="{Binding B}" />
+                          Text="{Binding B}"/>
 					</StackPanel>
 				</StackPanel>
 			</StackPanel>
@@ -68,7 +68,7 @@
 					<TextBox x:Name="TBox_Weight" FontSize="16" Margin="5,0,0,0"
 								  FontFamily="Consolas" 
 								  Grid.Column="1" 
-								  TextAlignment="Center" AcceptsReturn="False"
+								  AcceptsReturn="False" Width="80" TextAlignment="Justify"
 								  Text="{Binding Weight}"/>
 				</StackPanel>
 				<Slider Maximum="1" Value="{Binding Weight}" HorizontalAlignment="Left" Width="100" 

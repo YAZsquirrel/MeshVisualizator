@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace MeshVisualizator
 {
@@ -147,7 +146,7 @@ namespace MeshVisualizator
       private void SetVertices(string knotsfile, in ValueColorGradient vcg)
       {
          string[] number;
-         using (StreamReader sr = new StreamReader(@knotsfile))
+         using (StreamReader sr = new StreamReader(knotsfile))
          {
             string s = sr.ReadToEnd().Replace('.', ',');
             number = s.Split(new char[] { '\n', ' ', '\t', '\r' });

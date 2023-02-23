@@ -1,0 +1,18 @@
+[
+	{
+		"ColorCode" : "0000ff",
+		"Weight" : 0
+	},
+	{
+		"ColorCode" : "00ffff",
+		"Weight" : 0.333333333
+	},
+	{
+		"ColorCode" : "ffff00",
+		"Weight" : 0.666666666
+	},
+	{
+		"ColorCode" : "ff0000",
+		"Weight" : 1
+	},
+]

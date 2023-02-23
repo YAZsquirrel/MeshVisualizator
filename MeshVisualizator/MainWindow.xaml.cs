@@ -32,12 +32,16 @@ namespace MeshVisualizator
       {
          //vcg = new ValueColorGradient(Vector3.Zero, Vector3.One);  // white -> red
          //vcg = new ValueColorGradient(new Vector3(0, 0, 1) , new Vector3(1, 0, 0)); // blue -> red
-         vcg = new ValueColorGradient(new[]{ new Vector3(0, 0, 1),
+         if (!File.Exists(@"../../../default.spf"))
+            vcg.SetPalette(@"../../../default.spf");
+         else
+         {
+            vcg = new ValueColorGradient(new[]{ new Vector3(0, 0, 1),
                                              new Vector3(0, 1, 1),
                                              //new Vector3(0, 1, 0),
                                              new Vector3(1, 1, 0),
                                              new Vector3(1, 0, 0)});
-         vcg.Sort();
+         }
          DataContext = vcg;
          DrawScale();
 
@@ -300,6 +304,26 @@ namespace MeshVisualizator
          DrawScale();
          DrawSolution();
       }
+      private void MI_OpenPalette_Click(object sender, RoutedEventArgs e)
+      {
+         OpenFileDialog open = new OpenFileDialog();
+         open.Filter = "(Scale palette files *.spf)|*.spf";
+         open.ShowDialog();
+         string filename = open.FileName;
+
+         vcg.SetPalette(filename);
+         DrawScale();
+         DrawSolution();
+      }
+      private void MI_SavePalette_Click(object sender, RoutedEventArgs e)
+      {
+         SaveFileDialog save = new SaveFileDialog();
+         save.Filter = "(Scale palette files *.spf)|*.spf";
+         save.ShowDialog();
+         string filename = save.FileName;
+
+         vcg.SavePalette(filename);
+      }
       #endregion
       public void DrawSolution()
       {
@@ -311,12 +335,18 @@ namespace MeshVisualizator
                               meshType,
                               (float)glControl.ActualWidth,
                               (float)glControl.ActualHeight, vcg, camera);
-         else if (L_AddElements.Content as string != "File" && L_AddVertices.Content as string != "File")
+         else if (L_AddElements.Content as string != "File" && L_AddVertices.Content as string != "File" && mesh != null)
             if (!File.Exists(L_AddElements.Content as string))
                MessageBox.Show($"File \"{L_AddElements.Content}\" does not exist!");
             else if (!File.Exists(L_AddVertices.Content as string))
                MessageBox.Show($"File \"{L_AddVertices.Content}\" does not exist!");
 
       }
+
+      private void MI_About_Click(object sender, RoutedEventArgs e)
+      {
+         MessageBox.Show("Nothing to see here :p", "About", MessageBoxButton.OK);
+      }
+
    }
 }

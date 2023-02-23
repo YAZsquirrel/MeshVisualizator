@@ -24,7 +24,7 @@ namespace MeshVisualizator
          ParentWindow.DrawScale();
          ParentWindow.DrawSolution();
       }
-      
+
       private void B_MoveUp_Click(object sender, RoutedEventArgs e)
       {
          ParentWindow?.vcg.MoveUp(ParentWindow.vcg.ColorKnots
