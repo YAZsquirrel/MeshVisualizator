@@ -27,7 +27,7 @@
                        Background="FloralWhite"
                        FontFamily="Consolas"
                        TextAlignment="Center" AcceptsReturn="False"
-                       Text="{Binding ColorCode}" 
+                       Text="{Binding ColorCode, UpdateSourceTrigger=PropertyChanged}" 
 							  LostFocus="TBox_ColorCode_LostFocus"/>
 			</StackPanel>
 
@@ -39,7 +39,7 @@
                            FontFamily="Consolas" 
                            Grid.Column="1" 
                            TextAlignment="Center" AcceptsReturn="False" 
-                           Text="{Binding R}"/>
+                           Text="{Binding R, UpdateSourceTrigger=PropertyChanged}"/>
 					</StackPanel>
 
 					<StackPanel Orientation="Horizontal">
@@ -48,7 +48,7 @@
                            FontFamily="Consolas" 
                            Grid.Column="1" 
                            TextAlignment="Center" AcceptsReturn="False"
-                           Text="{Binding G}"/>
+                           Text="{Binding G, UpdateSourceTrigger=PropertyChanged}"/>
 					</StackPanel>
 
 					<StackPanel Orientation="Horizontal">
@@ -57,7 +57,7 @@
                           FontFamily="Consolas" 
                           Grid.Column="1" 
                           TextAlignment="Center" AcceptsReturn="False"
-                          Text="{Binding B}"/>
+                          Text="{Binding B, UpdateSourceTrigger=PropertyChanged}"/>
 					</StackPanel>
 				</StackPanel>
 			</StackPanel>
@@ -69,9 +69,9 @@
 								  FontFamily="Consolas" 
 								  Grid.Column="1" 
 								  AcceptsReturn="False" Width="80" TextAlignment="Justify"
-								  Text="{Binding Weight}"/>
+								  Text="{Binding Weight, UpdateSourceTrigger=PropertyChanged}"/>
 				</StackPanel>
-				<Slider Maximum="1" Value="{Binding Weight}" HorizontalAlignment="Left" Width="100" 
+				<Slider Maximum="1" Value="{Binding Weight, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Width="100" 
 						  ValueChanged="Slider_ValueChanged" PreviewMouseUp="Slider_PreviewMouseUp" 
 						   />
 			</StackPanel>

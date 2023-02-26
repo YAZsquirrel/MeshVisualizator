@@ -8,6 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Palettes\Новая папка\**" />
+    <Compile Remove="Новая папка\**" />
+    <EmbeddedResource Remove="Palettes\Новая папка\**" />
+    <EmbeddedResource Remove="Новая папка\**" />
+    <None Remove="Palettes\Новая папка\**" />
+    <None Remove="Новая папка\**" />
+    <Page Remove="Palettes\Новая папка\**" />
+    <Page Remove="Новая папка\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.14" />
     <PackageReference Include="OpenTK" Version="4.7.7" />

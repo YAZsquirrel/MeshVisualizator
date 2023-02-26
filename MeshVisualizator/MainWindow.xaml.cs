@@ -32,8 +32,10 @@ namespace MeshVisualizator
       {
          //vcg = new ValueColorGradient(Vector3.Zero, Vector3.One);  // white -> red
          //vcg = new ValueColorGradient(new Vector3(0, 0, 1) , new Vector3(1, 0, 0)); // blue -> red
-         if (!File.Exists(@"../../../default.spf"))
-            vcg.SetPalette(@"../../../default.spf");
+         if (File.Exists(@"../../../Palettes/default.spf"))
+         {
+            vcg = new ValueColorGradient("Palettes/default.spf");
+         }
          else
          {
             vcg = new ValueColorGradient(new[]{ new Vector3(0, 0, 1),

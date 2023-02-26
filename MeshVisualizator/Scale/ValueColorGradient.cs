@@ -11,7 +11,6 @@ using System.Windows.Media;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Schema;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace MeshVisualizator
 {
@@ -133,8 +132,8 @@ namespace MeshVisualizator
       public static string GetColorCodeByColorVector(Vector3 color)
       {
          return ((int)(color.X * 255)).ToString("X2") + 
-                  ((int)(color.Y * 255)).ToString("X2") + 
-                  ((int)(color.Z * 255)).ToString("X2");
+                ((int)(color.Y * 255)).ToString("X2") + 
+                ((int)(color.Z * 255)).ToString("X2");
       }
       public static bool IsStringAColor(string colorstring)
       {
@@ -193,7 +192,6 @@ namespace MeshVisualizator
             throw new ArgumentException("Weight must be in [0, 1]");
          
          colorKnots = new ObservableCollection<ColorKnot>();
-         int id = 1;
          foreach (var color in Colors)
             colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w });
 
@@ -220,6 +218,13 @@ namespace MeshVisualizator
          };
          Sort();
       }
+
+      public ValueColorGradient(string pallete_file)
+      {
+         colorKnots = new ObservableCollection<ColorKnot>();
+         SetPalette(pallete_file);
+      }
+
       public void AddColorKnot(Vector3 color, float weight) 
       {
          if (weight > 1f || weight < 0f)
@@ -322,10 +327,10 @@ namespace MeshVisualizator
             return;
 
          using var palette_reader = new StreamReader(palette_file);
-         if (!File.Exists(@"../../../Palette_schema.json"))
+         if (!File.Exists(@"../../../Scale/Palette_schema.json"))
             throw new Exception($"Couldn't find schema \"Palette_schema.json\"");
 
-         using var schema_reader = new StreamReader(@"../../../Palette_schema.json");
+         using var schema_reader = new StreamReader(@"../../../Scale/Palette_schema.json");
 
          try
          {
@@ -365,7 +370,7 @@ namespace MeshVisualizator
 
          foreach (var ck in colorKnots)
             sb.AppendLine($"{{\n\t\"ColorKnots\" : \"{ck.ColorCode}\",\n\t\"Weight\" : { ck.Weight.ToString(CultureInfo.InvariantCulture)} }},");
-         sb.Append("]");
+         sb.Append("\n]");
 
          File.WriteAllText(palette_file, sb.ToString());
       }
