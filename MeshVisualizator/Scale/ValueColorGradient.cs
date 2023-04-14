@@ -176,7 +176,6 @@ namespace MeshVisualizator
          if (Colors.Where(x => x.w > 1f || x.w < 0f).ToArray().Length > 0)
             throw new ArgumentException("Weight must be in [0, 1]");
          colorKnots = new ObservableCollection<ColorKnot>();
-         int id = 1;
          foreach (var color in Colors)
             colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w});
 

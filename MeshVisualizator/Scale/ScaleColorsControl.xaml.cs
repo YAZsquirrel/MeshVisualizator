@@ -11,7 +11,7 @@ namespace MeshVisualizator
     /// </summary>
    public partial class ScaleColorsControl : UserControl
    {
-      MainWindow ParentWindow;
+      MainWindow? ParentWindow;
       public ScaleColorsControl()
       {
          InitializeComponent();
@@ -30,8 +30,8 @@ namespace MeshVisualizator
          ParentWindow?.vcg.MoveUp(ParentWindow.vcg.ColorKnots
                                           .First(x => x.Weight == float.Parse(TBox_Weight.Text, CultureInfo.InvariantCulture)
                                                    && x.ColorCode == TBox_ColorCode.Text));
-         ParentWindow.DrawScale();
-         ParentWindow.DrawSolution();
+         ParentWindow?.DrawScale();
+         ParentWindow?.DrawSolution();
       }
       
       private void B_MoveDown_Click(object sender, RoutedEventArgs e)
@@ -39,8 +39,8 @@ namespace MeshVisualizator
          ParentWindow?.vcg.MoveDown(ParentWindow.vcg.ColorKnots
                                           .First(x => x.Weight == float.Parse(TBox_Weight.Text, CultureInfo.InvariantCulture)
                                                    && x.ColorCode == TBox_ColorCode.Text));
-         ParentWindow.DrawScale();
-         ParentWindow.DrawSolution();
+         ParentWindow?.DrawScale();
+         ParentWindow?.DrawSolution();
       }
       private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
       {

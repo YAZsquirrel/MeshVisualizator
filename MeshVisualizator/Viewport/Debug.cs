@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 
@@ -22,9 +23,7 @@ namespace MeshVisualizator
          string message = Marshal.PtrToStringAnsi(pMessage, length);
          // The rest of the function is up to you to implement, however a debug output
          // is always useful.
-         //MessageBox.Show($"[{severity} source={source} type={type} id={id}] \n{message}", "Error!", MessageBoxButton.OK);
-         //L_log.Content = $"[{severity} source={source} type={type} id={id}] \n{message}";
-         Console.WriteLine($"[{severity} source={source} type={type} id={id}] \n\n{message}\n\n");
+         Debug.WriteLine($"[{severity} source={source} type={type} id={id}] \n\n{message}\n\n");
          // Potentially, you may want to throw from the function for certain severity
          // messages.
          if (type == DebugType.DebugTypeError)

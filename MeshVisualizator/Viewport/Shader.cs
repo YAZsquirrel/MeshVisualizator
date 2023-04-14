@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MeshVisualizator
 {
@@ -10,32 +11,18 @@ namespace MeshVisualizator
       int shaderProgram = -1;
       List<int> shaders;
       private readonly Dictionary<string, int> uniformLocations;
-      public ShaderProgram(string[] shader_files, ShaderType[] types) 
+      public ShaderProgram(string[] shader_filepathes, ShaderType[] types) 
       {
-         this.shader_files = shader_files;
+         this.shader_files = shader_filepathes;
          this.types = types;
          uniformLocations = new Dictionary<string, int>();
          shaderProgram = GL.CreateProgram();
          shaders = new List<int>();
       }
-      private int MakeShader(string shader_file, ShaderType type)
+      private int MakeShader(string shader_filepath, ShaderType type)
       {
          int shader = GL.CreateShader(type);
-         string stype = "";
-         switch (type)
-         {
-            case ShaderType.FragmentShader:
-               stype = "Fragment shaders/";
-               break;
-            case ShaderType.VertexShader:
-               stype = "Vertex shaders/";
-               break;
-            case ShaderType.GeometryShader:
-               stype = "Geometry shaders/";
-               break;
-         }
-      
-         using (StreamReader sr = new(@"../../../" + @stype + shader_file))
+         using (StreamReader sr = new(@"../../../" + shader_filepath))
          {
             string shader_text = sr.ReadToEnd();
             GL.ShaderSource(shader, shader_text);
@@ -86,7 +73,8 @@ namespace MeshVisualizator
             string info;
             GL.GetProgramInfoLog(shaderProgram, out info);
             //TODO: logger
-            throw new Exception(info);
+            //throw new Exception(info);
+            Debug.WriteLine(info);
          }
 
          GL.GetProgram(shaderProgram, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);

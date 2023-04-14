@@ -3,10 +3,13 @@ using System.Windows;
 using Microsoft.Win32;
 using OpenTK.Wpf;
 using OpenTK.Windowing.Common;
+using static MeshVisualizator.ScalarMesh2D;
 using static MeshVisualizator.Mesh2D;
 using System.Windows.Input;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Text;
+using Microsoft.VisualBasic.FileIO;
 
 namespace MeshVisualizator
 {
@@ -16,6 +19,10 @@ namespace MeshVisualizator
       public ValueColorGradient vcg;
       Camera2D camera;
       MeshType meshType = MeshType.Quadrilateral;
+      FieldType fieldType = FieldType.Scalar;
+
+      VectorMesh2D.ArrowType ArrowType = VectorMesh2D.ArrowType.Lines;
+
       public MainWindow()
       {
          InitializeComponent();
@@ -26,6 +33,8 @@ namespace MeshVisualizator
             MajorVersion = 4, 
             GraphicsProfile = ContextProfile.Core,
          });
+         GL.Enable(EnableCap.LineSmooth);
+         GL.GetFloat(GetPName.AliasedLineWidthRange, new float[] { 2, 10 });
       }
       #region Scale
       private void R_Scale_Loaded(object sender, RoutedEventArgs e)
@@ -34,7 +43,7 @@ namespace MeshVisualizator
          //vcg = new ValueColorGradient(new Vector3(0, 0, 1) , new Vector3(1, 0, 0)); // blue -> red
          if (File.Exists(@"../../../Palettes/default.spf"))
          {
-            vcg = new ValueColorGradient("Palettes/default.spf");
+            vcg = new ValueColorGradient(@"../../../Palettes/default.spf");
          }
          else
          {
@@ -75,9 +84,8 @@ namespace MeshVisualizator
          TBox_10.Text = $"{vcg.GetValueByWeight(1f)}";
       }
       #endregion
-      #region glContol
-      Color4 color = new Color4(0.9f,0.9f,0.9f,1f);
-      TimeSpan dt;
+      #region Glcontrol
+      Color4 color = new(0.9f,0.9f,0.9f,1f);
       private void glControl_Loaded(object sender, RoutedEventArgs e)
       {
          GL.DebugMessageCallback(DebugMessageDelegate, IntPtr.Zero);
@@ -95,16 +103,16 @@ namespace MeshVisualizator
       string fps = ""; 
       private void OpenTkControl_OnRender(TimeSpan delta)
       {
-         dt = delta;
          GL.ClearColor(color);
          GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+         mesh?.Draw(camera);
 
-         mesh?.DrawMesh(camera);
-         Title = $"Cam pos: {-camera?.Position}, Scale:{camera?.Scale}, " +
-                 $"Mouse: px:({PrevMousePos.X}, {glControl.ActualHeight - PrevMousePos.Y}) " +
-                 $"m:({-camera?.Position.X + 1f / camera?.Scale * PixelsToMeters((float)(PrevMousePos.X - glControl.ActualWidth/2f))}, " +
-                 $"{-camera?.Position.Y + 1f / camera?.Scale * PixelsToMeters((float)(glControl.ActualHeight/2f - PrevMousePos.Y))}) " +
-                 $"relative:({PrevMousePos.X / glControl.ActualWidth}, {1f - PrevMousePos.Y / glControl.ActualHeight}) " + fps;
+         var sb = new StringBuilder();
+         Title = sb.Append($"Cam pos: {-camera?.Position}, Scale:{camera?.Scale}, " +
+                           $"Mouse: px:({PrevMousePos.X}, {glControl.ActualHeight - PrevMousePos.Y}) " +
+                           $"m:({-camera?.Position.X + 1f / camera?.Scale * PixelsToMeters((float)(PrevMousePos.X - glControl.ActualWidth / 2f))}, " +
+                           $"{-camera?.Position.Y + 1f / camera?.Scale * PixelsToMeters((float)(glControl.ActualHeight / 2f - PrevMousePos.Y))}) " +
+                           $"relative:({PrevMousePos.X / glControl.ActualWidth}, {1f - PrevMousePos.Y / glControl.ActualHeight}) " + fps).ToString();
 
          if (secTicks > 0.5f)
          {
@@ -121,7 +129,7 @@ namespace MeshVisualizator
       }
       private void glControl_Unloaded(object sender, RoutedEventArgs e)
       {
-         // Unbind all the resources by binding the targets to 0/null.
+         // Unbind all the resources by binding the targets to null.
          mesh?.RemoveMesh();
       }
       Point PrevMousePos;
@@ -146,7 +154,7 @@ namespace MeshVisualizator
       bool MouseOnControl = false;
       private void glControl_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
       {
-         float direction = 0;
+         float direction;
          const float scaleFactor = 2f;
 
          if (e.Delta < 0)
@@ -183,9 +191,23 @@ namespace MeshVisualizator
       }
       #endregion
       #region UIElements
-      private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      private void CBox_MeshType_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
          meshType = (MeshType)((ComboBox)sender).SelectedIndex;
+         DrawSolution();
+      }
+      private void CBox_fieldType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      {
+         fieldType = (FieldType)((ComboBox)sender).SelectedIndex;
+         if (G_VectorParams is not null)
+            G_VectorParams.IsEnabled = fieldType == FieldType.Vector;
+         DrawSolution();
+      }
+      private void CBox_Vectors_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      {
+         if (mesh is VectorMesh2D)
+            (mesh as VectorMesh2D)?.ChangeArrowType(ArrowType = (VectorMesh2D.ArrowType)((ComboBox)sender).SelectedIndex);
+         DrawSolution();
       }
       private void L_AddVertices_Drop(object sender, DragEventArgs e)
       {
@@ -200,11 +222,11 @@ namespace MeshVisualizator
             DrawSolution();
             DrawScale();
          }
-         catch 
+         catch (Exception ex)
          {
             mesh?.RemoveMesh();
             mesh = null;
-            MessageBox.Show($"File {L_AddVertices.Content} does not satisfy the format or is corrupted!");
+            MessageBox.Show(ex.Message + "\n" + ex.StackTrace?.ToString());
          }
 
       }
@@ -221,11 +243,31 @@ namespace MeshVisualizator
             DrawSolution();
             DrawScale();
          }
-         catch
+         catch (Exception ex)
          {
             mesh?.RemoveMesh();
             mesh = null;
-            MessageBox.Show($"File {L_AddElements.Content} does not satisfy the format or is corrupted!");
+            MessageBox.Show(ex.Message + "\n" + ex.StackTrace?.ToString());
+         }
+      }
+      private void L_AddVectors_Drop(object sender, DragEventArgs e)
+      {
+         if (e.Data.GetDataPresent(DataFormats.FileDrop))
+         {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            var file = files[0];
+            L_AddVectors.Content = file;
+         }
+         try
+         {
+            DrawSolution();
+            DrawScale();
+         }
+         catch (Exception ex)
+         {
+            mesh?.RemoveMesh();
+            mesh = null;
+            MessageBox.Show(ex.Message + "\n" + ex.StackTrace?.ToString());
          }
       }
       private void B_SetToOrigin_Click(object sender, RoutedEventArgs e)
@@ -247,11 +289,11 @@ namespace MeshVisualizator
             DrawSolution();
             DrawScale();
          }
-         catch
+         catch (Exception ex)
          {
             mesh?.RemoveMesh();
             mesh = null;
-            MessageBox.Show($"File {filename} does not satisfy the format or is corrupted!");
+            MessageBox.Show(ex.Message + "\n" + ex.StackTrace?.ToString());
          }
       }
       private void B_AddVertices_Click(object sender, RoutedEventArgs e)
@@ -266,11 +308,30 @@ namespace MeshVisualizator
             DrawSolution();
             DrawScale();
          }
-         catch
+         catch (Exception ex)
          {
             mesh?.RemoveMesh();
             mesh = null;
-            MessageBox.Show($"File {filename} does not satisfy the format or is corrupted!");
+            MessageBox.Show(ex.Message + "\n" + ex.StackTrace?.ToString());
+         }
+      }
+      private void B_AddVectors_Click(object sender, RoutedEventArgs e)
+      {
+         OpenFileDialog open = new OpenFileDialog();
+         open.Filter = "Text files(*.txt)|*.txt";
+         open.ShowDialog();
+         string filename = open.FileName;
+         L_AddVectors.Content = filename;
+         try
+         {
+            DrawSolution();
+            DrawScale();
+         }
+         catch (Exception ex)
+         {
+            mesh?.RemoveMesh();
+            mesh = null;
+            MessageBox.Show(ex.Message + "\n" + ex.StackTrace?.ToString());
          }
       }
       private void B_Recompile_Click(object sender, RoutedEventArgs e)
@@ -284,11 +345,13 @@ namespace MeshVisualizator
       }
       private void CB_ShowGrid_Checked(object sender, RoutedEventArgs e)
       {
-         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+         //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+         Mesh2D.isGridDrawing = true;
       }
       private void CB_ShowGrid_Unchecked(object sender, RoutedEventArgs e)
       {
-         GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+         //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+         Mesh2D.isGridDrawing = false;
       }
       private void CB_Logarithmic_Checked(object sender, RoutedEventArgs e)
       {
@@ -311,9 +374,8 @@ namespace MeshVisualizator
          OpenFileDialog open = new OpenFileDialog();
          open.Filter = "(Scale palette files *.spf)|*.spf";
          open.ShowDialog();
-         string filename = open.FileName;
 
-         vcg.SetPalette(filename);
+         vcg.SetPalette(open.FileName);
          DrawScale();
          DrawSolution();
       }
@@ -322,21 +384,31 @@ namespace MeshVisualizator
          SaveFileDialog save = new SaveFileDialog();
          save.Filter = "(Scale palette files *.spf)|*.spf";
          save.ShowDialog();
-         string filename = save.FileName;
 
-         vcg.SavePalette(filename);
+         vcg.SavePalette(save.FileName);
       }
       #endregion
       public void DrawSolution()
       {
          mesh?.RemoveMesh();
          mesh = null;
+
          if (File.Exists(L_AddElements.Content as string) && File.Exists(L_AddVertices.Content as string))
-            mesh = new Mesh2D(L_AddElements.Content as string,
-                              L_AddVertices.Content as string,
-                              meshType,
-                              (float)glControl.ActualWidth,
-                              (float)glControl.ActualHeight, vcg, camera);
+            mesh = fieldType switch
+            {
+               FieldType.Scalar =>
+                  new ScalarMesh2D(L_AddElements.Content as string,
+                                   L_AddVertices.Content as string,
+                                   (float)glControl.ActualWidth,
+                                   (float)glControl.ActualHeight, vcg, camera, meshType),
+               FieldType.Vector when File.Exists(L_AddVectors.Content as string) =>
+                   new VectorMesh2D(L_AddElements.Content as string,
+                                   L_AddVertices.Content as string,
+                                   L_AddVectors.Content as string,
+                                   (float)glControl.ActualWidth,
+                                   (float)glControl.ActualHeight, vcg, camera, ArrowType, meshType),
+               _ => null
+            };
          else if (L_AddElements.Content as string != "File" && L_AddVertices.Content as string != "File" && mesh != null)
             if (!File.Exists(L_AddElements.Content as string))
                MessageBox.Show($"File \"{L_AddElements.Content}\" does not exist!");
@@ -350,5 +422,21 @@ namespace MeshVisualizator
          MessageBox.Show("Nothing to see here :p", "About", MessageBoxButton.OK);
       }
 
+      private void S_VecLen_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+      {
+         VectorMesh2D.VectorLength = (float)e.NewValue;
+         DrawSolution();
+      }
+      private void CBox_ConsiderLen_Checked(object sender, RoutedEventArgs e)
+      {
+         VectorMesh2D.IsLengthConsistent = false;
+         DrawSolution();
+      }
+      private void CBox_ConsiderLen_Unchecked(object sender, RoutedEventArgs e)
+      {
+         VectorMesh2D.IsLengthConsistent = true;
+         DrawSolution();
+
+      }
    }
 }
