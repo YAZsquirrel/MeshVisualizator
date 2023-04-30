@@ -85,26 +85,30 @@ namespace MeshVisualizator
             uniformLocations.Add(key, location);
          }
       }
-      public void setBool(string name, bool value)
+      public void SetBool(string name, bool value)
       {
          UseShaders();
          GL.Uniform1(GL.GetUniformLocation(shaderProgram, name), Convert.ToInt32(value));
       }
-      public void setInt(string name, int value)
+      public void SetInt(string name, int value)
       {
          UseShaders();
          GL.Uniform1(GL.GetUniformLocation(shaderProgram, name), value);
       }
-      public void setFloat(string name, float value)
+      public void SetFloat(string name, float value)
       {
          UseShaders();
          GL.Uniform1(GL.GetUniformLocation(shaderProgram, name), value);
       }
-      public void setMatrix4(string name, Matrix4 mat4)
+      public void SetMatrix4(string name, Matrix4 mat4)
       {
          UseShaders();
          GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram, name), false, ref mat4);
       }
+
+      public int GetAttribLocation(string name) =>
+         GL.GetAttribLocation(shaderProgram, name);
+
 
       private bool disposedValue = false;
       protected virtual void Dispose(bool disposing)

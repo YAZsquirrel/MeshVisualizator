@@ -1,12 +1,6 @@
-﻿using Microsoft.VisualBasic;
-using Newtonsoft.Json.Linq;
-using OpenTK.Mathematics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Windows.Controls;
 
 namespace MeshVisualizator
 {
@@ -21,7 +15,6 @@ namespace MeshVisualizator
    {
       public float X;
       public float Y;
-      public float Value;
    }
    struct Vector2D
    {
@@ -61,12 +54,11 @@ namespace MeshVisualizator
                      float height,
                      MeshType meshType,
                      string[] shader_files,
-                     ShaderType[] shader_types,
-                     in Camera2D? camera)
+                     ShaderType[] shader_types)
       {
          this.shader_files = shader_files;
          this.shader_types = shader_types;
-         ResetShader(camera, width, height);
+         ResetShader(width, height);
 
          this.meshType = meshType;
          switch (meshType)
@@ -78,46 +70,41 @@ namespace MeshVisualizator
                Element.size = 4;
                break;
          }
+
+
       }
-      public void ResetShader(Camera2D? camera, float width, float height)
+      public void ResetShader(float width, float height)
       {
-         Projection = Camera2D.GetOrthoMatrix(PixelsToMeters(width), PixelsToMeters(height));
-         Transform = camera!.GetTransformMatrix();
+         Projection = Camera2D.Instance.GetOrthoMatrix(PixelsToMeters(width), PixelsToMeters(height));
+         Transform = Camera2D.Instance.GetTransformMatrix();
          
          shader?.Dispose();
          shader = new ShaderProgram(shader_files, shader_types);
          shader.LinkShaders();
-         shader.setMatrix4("projection", Projection);
-         shader.setMatrix4("transform", Transform);
-
+         shader.SetMatrix4("projection", Projection);
+         shader.SetMatrix4("transform", Transform);
+ 
          gridShader?.Dispose();
          gridShader = new ShaderProgram(new []{ @"Shaders/Grid shaders/fragment.glsl", @"Shaders/Grid shaders/vertex.glsl" }, 
                                         new[] { ShaderType.FragmentShader, ShaderType.VertexShader });
          gridShader.LinkShaders();
-         gridShader.setMatrix4("projection", Projection);
-         gridShader.setMatrix4("transform", Transform);
+         //gridShader.SetMatrix4("projection", Projection);
+         //gridShader.SetMatrix4("transform", Transform);
       }
-      virtual public void Draw(Camera2D? camera)
-
+      virtual public void Draw()
       {
-         Transform = camera!.GetTransformMatrix();
-
          if (isGridDrawing)
          {
             // draw grid
             gridShader.UseShaders();
-            gridShader.setMatrix4("projection", Projection);
-            gridShader.setMatrix4("transform", Transform);
+            gridShader.SetMatrix4("projection", Projection);
+            gridShader.SetMatrix4("transform", Transform);
 
-            GL.LineWidth(2f);
+            GL.LineWidth(1f);
             GL.BindVertexArray(VAOgrid);
             GL.DrawElements(BeginMode.Lines, indecesGrid.Length, DrawElementsType.UnsignedInt, 0);
             GL.BindVertexArray(0);
          }
-         // draw vectors/scalars
-         shader.UseShaders();
-         shader.setMatrix4("projection", Projection);
-         shader.setMatrix4("transform", Transform);
 
       }
       private void SetGridBuffers()
@@ -135,20 +122,10 @@ namespace MeshVisualizator
                                 3,
                                 VertexAttribPointerType.Float,
                                 false,
-                                sizeof(float) * (this is not VectorMesh2D ? 6 : 3), // disgusting
+                                sizeof(float) * 3, 
                                 0);
          GL.EnableVertexAttribArray(0);
 
-         if (this is not VectorMesh2D) // i am stupid
-         {
-            GL.VertexAttribPointer(1,
-                                   3,
-                                   VertexAttribPointerType.Float,
-                                   false,
-                                   6 * sizeof(float),
-                                   3 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-         }
          EBOgrid = GL.GenBuffer();
          GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBOgrid);
          GL.BufferData(BufferTarget.ElementArrayBuffer,
@@ -164,10 +141,11 @@ namespace MeshVisualizator
          GL.DeleteBuffer(EBOgrid);
          GL.DeleteVertexArray(VAOgrid);
       }
-      virtual protected void GetMeshData(string elemsfile, string knotsfile, in ValueColorGradient vcg)
+      virtual protected void GetMeshData(string elemsfile, string knotsfile, string resultfile)
       {
-         SetVertices(knotsfile, vcg);
+         SetVertices(knotsfile);
          SetIndeces(elemsfile);
+         SetResults(resultfile);
          SetGridBuffers();
       }
       virtual protected void SetIndeces(string elemsfile)
@@ -198,8 +176,20 @@ namespace MeshVisualizator
          {
             case MeshType.Triangle:
                foreach (var elem in elems)
-                  foreach (var num in elem.KnotNums)
+               {
+                  uint[] elemNums = new uint[] {elem.KnotNums[0],
+                                                elem.KnotNums[1],
+
+                                                elem.KnotNums[1],
+                                                elem.KnotNums[2],
+
+                                                elem.KnotNums[0],
+                                                elem.KnotNums[2]};
+                  foreach (var num in elem.KnotNums)                          
                      indecesList.Add(num);
+                  foreach (var num in elemNums)
+                     gridIndecesList.Add(num);
+               }
                break;
 
             case MeshType.Quadrilateral:
@@ -234,7 +224,37 @@ namespace MeshVisualizator
          indeces = indecesList.ToArray();
          indecesGrid = gridIndecesList.ToArray();
       }
-      abstract protected void SetVertices(string knotsfile, in ValueColorGradient vcg);
+      virtual protected void SetVertices(string knotsfile)
+      {
+         string[] number;
+         using (StreamReader sr = new StreamReader(knotsfile))
+         {
+            string s = sr.ReadToEnd().Replace('.', ',');
+            number = s.Split(new char[] { '\n', ' ', '\t', '\r' });
+         }
+
+         number = number.Where(w => w.Length > 0).ToArray();
+         List<Knot2D> knots = new List<Knot2D>();
+         for (int i = 0; i < number.Length; i += 2)
+         {
+            knots.Add(new Knot2D
+            {
+               X = float.Parse(number[i]),
+               Y = float.Parse(number[i + 1])
+            });
+         }
+
+         vertices = new float[3 * knots.Count];
+
+         for (int i = 0; i < knots.Count; i++)
+         {
+            vertices[i * 3 + 0] = knots[i].X;
+            vertices[i * 3 + 1] = knots[i].Y;
+            vertices[i * 3 + 2] = 0f;
+         }
+
+      }
+      abstract protected void SetResults(string resultfile);
       abstract protected void SetBuffers();
    }
 }

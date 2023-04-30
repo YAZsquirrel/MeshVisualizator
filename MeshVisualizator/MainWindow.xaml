@@ -18,14 +18,18 @@
 			<RowDefinition Height="30"/>
 			<RowDefinition Height="30"/>
 			<RowDefinition Height="30"/>
+			<RowDefinition Height="30"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="30"/>
-			<RowDefinition Height="130"/>
+			<RowDefinition Height="65"/>
 		</Grid.RowDefinitions>
 		<Menu Grid.ColumnSpan="3">
 			<MenuItem Header="Files">
 				<MenuItem Header="Open vertex file" Click="B_AddVertices_Click"></MenuItem>
-				<MenuItem Header="Open elements file" Click="B_AddElements_Click"></MenuItem>
+				<MenuItem Header="Open element file" Click="B_AddElements_Click"></MenuItem>
+				<MenuItem Header="Open result file" Click="B_AddResults_Click"></MenuItem>
+				<Separator/>
+				<MenuItem Header="Clear files" Click="MI_ClearFiles_Click"></MenuItem>
 				<Separator/>
 				<MenuItem Header="Open scale pallette file" Click="MI_OpenPalette_Click"></MenuItem>
 				<MenuItem Header="Save scale pallette file" Click="MI_SavePalette_Click"></MenuItem>
@@ -33,7 +37,7 @@
 			<MenuItem Header="Help">
 				<MenuItem Header="Recompile shaders" Click="B_Recompile_Click"/>
 				<MenuItem Header="Redraw" Click="B_Redraw_Click" ToolTip="If smth gone wrong"/>
-				<MenuItem Header="Open logger" Click="B_Redraw_Click" ToolTip="Check errors"/>
+				<!--<MenuItem Header="Open logger" Click="B_Redraw_Click" ToolTip="Check errors"/>-->
 			</MenuItem>
 			<MenuItem Header="About" Click="MI_About_Click"></MenuItem>
 		</Menu>
@@ -41,19 +45,32 @@
 		<Label Margin="2,2,2,2" Content="Vertex File" x:Name="L_AddVertices" ToolTip="File w/ vertecies" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" AllowDrop="True" Drop="L_AddVertices_Drop" Background="#FFA7A7A7" FontSize="10"/>
 		<Label Margin="2,2,2,2" Content="Elements File" x:Name="L_AddElements" ToolTip="File w/ indecies" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  AllowDrop="True" Drop="L_AddElements_Drop" Background="#FFA7A7A7" FontSize="10"/>
 
-		<ComboBox x:Name="CBox_fieldType" Grid.Row="3" Grid.Column="1" Margin="3,3,3,3" Text="Select mesh type" SelectedIndex="0" SelectionChanged="CBox_fieldType_SelectionChanged">
+		<Label Margin="2,2,2,2" 
+						 Content="Result File" 
+						 x:Name="L_AddResults" 
+						 ToolTip="File w/ results" 
+						 Grid.Column="1" 
+						 Grid.ColumnSpan="3" 
+						 Grid.Row="3" 
+						 VerticalAlignment="Stretch"
+						 HorizontalAlignment="Stretch" 
+						 AllowDrop="True" 
+						 Drop="L_AddResults_Drop" Background="#FFA7A7A7" FontSize="10"/>
+
+
+		<ComboBox x:Name="CBox_fieldType" Grid.Row="4" Grid.Column="1" Margin="3,3,3,3" Text="Select mesh type" SelectedIndex="0" SelectionChanged="CBox_fieldType_SelectionChanged">
 			<Label Content="Scalar field"/>
 			<Label Content="Vector field"/>
-			<Label Content="Vector and scalar fields" Visibility="Collapsed"/>
+			<!--<Label Content="Vector and scalar fields" Visibility="Collapsed" IsEnabled="False"/>-->
 		</ComboBox>
 
-		<ComboBox x:Name="CBox_MeshType" Grid.Row="3" Grid.Column="2" Margin="3,3,3,3" Text="Select mesh type" SelectedIndex="0" SelectionChanged="CBox_MeshType_SelectionChanged">
+		<ComboBox x:Name="CBox_MeshType" Grid.Row="4" Grid.Column="2" Margin="3,3,3,3" Text="Select mesh type" SelectedIndex="0" SelectionChanged="CBox_MeshType_SelectionChanged">
 			<Label Content="Quadraliteral"/>
 			<Label Content="Triangle"/>
 		</ComboBox>
 
 		<glWpfControl:GLWpfControl Grid.ColumnSpan="1" 
-											Grid.RowSpan="6" 
+											Grid.RowSpan="7" 
 											Grid.Row="1"
 											x:Name="glControl" 
 											Margin="10,10,10,5" 
@@ -66,7 +83,7 @@
 											MouseEnter="glControl_GotMouseCapture"
 											MouseLeave="glControl_LostMouseCapture"/>
 
-		<Grid x:Name="ScaleGrid" Grid.Column="1" Grid.Row="4">
+		<Grid x:Name="ScaleGrid" Grid.Column="1" Grid.Row="5">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*"/>
 				<ColumnDefinition Width="*"/>
@@ -106,7 +123,7 @@
 			</Grid>
 		</Grid>
 
-			<Border Background="LightSlateGray" BorderThickness="2" Margin="10, 10, 10, 10" Grid.Column="3" Grid.Row="4">
+			<Border Background="LightSlateGray" BorderThickness="2" Margin="10, 10, 10, 10" Grid.Column="3" Grid.Row="5">
 				<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
 					<ItemsControl x:Name="IC_Colors" Visibility="Visible" Background="#bababa" ItemsSource="{Binding ColorKnots}">
 						<ItemsControl.ItemTemplate>
@@ -118,17 +135,13 @@
 				</ScrollViewer>
 			</Border>
 
-			<CheckBox Margin="5,5,5,5" x:Name="CB_ShowGrid" Content="Show Grid?" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Stretch" Checked="CB_ShowGrid_Checked" Unchecked="CB_ShowGrid_Unchecked"/>
-			<CheckBox Margin="5,5,5,5" Visibility="Hidden" x:Name="CB_Logarithmic" Content="Logarithmic scale?" Grid.Column="2" Grid.ColumnSpan="1" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Stretch" Checked="CB_Logarithmic_Checked" Unchecked="CB_Logarithmic_Unchecked"/>
-			<Button Margin="5,5,5,5" x:Name="B_SetToOrigin" Content="Return to origin" Grid.Column="3" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Right" Click="B_SetToOrigin_Click"/>
-			<Button Margin="5,5,5,5" x:Name="B_AddNewColorKnot" Content="Add new color to scale" Grid.Column="3" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Left" Click="B_AddNewColorKnot_Click"/>
-			<!--<ScrollViewer Grid.Row="7" Grid.ColumnSpan="4" Background="#FFf5f5f5" Margin="2,0,2,2">
-				<Label x:Name="L_log" Margin="3,0,3,3" Content="Clear!" FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-			</ScrollViewer>-->
-			<Grid x:Name="G_VectorParams" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2" Margin="5">
+			<CheckBox Margin="5,5,5,5" x:Name="CB_ShowGrid" Content="Show Grid?" Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Stretch" Checked="CB_ShowGrid_Checked" Unchecked="CB_ShowGrid_Unchecked"/>
+			<CheckBox Margin="5,5,5,5" Visibility="Hidden" x:Name="CB_Logarithmic" Content="Logarithmic scale?" Grid.Column="2" Grid.ColumnSpan="1" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Stretch" Checked="CB_Logarithmic_Checked" Unchecked="CB_Logarithmic_Unchecked"/>
+			<Button Margin="5,5,5,5" x:Name="B_SetToOrigin" Content="Return to origin" Grid.Column="3" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Right" Click="B_SetToOrigin_Click"/>
+			<Button Margin="5,5,5,5" x:Name="B_AddNewColorKnot" Content="Add new color to scale" Grid.Column="3" Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left" Click="B_AddNewColorKnot_Click"/>
+
+			<Grid x:Name="G_VectorParams" Grid.Column="1" Grid.Row="7" Grid.ColumnSpan="2" Margin="5" IsEnabled="False">
 				<Grid.RowDefinitions>
-					<RowDefinition/>
-					<RowDefinition/>
 					<RowDefinition/>
 					<RowDefinition/>
 				</Grid.RowDefinitions>
@@ -141,18 +154,6 @@
 				</TextBlock>
 				<TextBlock Margin="2" FontSize="14" Background="#bababa" Grid.Column="1" Grid.Row="0" TextAlignment="Center">Vector length</TextBlock>
 
-				<Label Margin="2,2,2,2" 
-						 Content="Vector File" 
-						 x:Name="L_AddVectors" 
-						 ToolTip="File w/ vectors" 
-						 Grid.Column="0" 
-						 Grid.ColumnSpan="2" 
-						 Grid.Row="3" 
-						 VerticalAlignment="Stretch"
-						 HorizontalAlignment="Stretch" 
-						 AllowDrop="True" 
-						 Drop="L_AddVectors_Drop" Background="#FFA7A7A7" FontSize="10"/>
-
 				<ComboBox x:Name="CBox_Vectors" Grid.Column="0" Grid.Row="1" Margin="3,3,3,3" Text="Select mesh type" SelectedIndex="0" SelectionChanged="CBox_Vectors_SelectionChanged">
 					<Label Content="Lines"/>
 					<Label Content="Thick lines"/>
@@ -163,8 +164,8 @@
 				<StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 					<CheckBox x:Name="CBox_ConsiderLen" Content="Consider length?" Margin="5" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" 
 						Checked="CBox_ConsiderLen_Checked" Unchecked="CBox_ConsiderLen_Unchecked" IsChecked="False"/>
-					<Slider x:Name="S_VecLen" Margin="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="110" ValueChanged="S_VecLen_ValueChanged"
-					 Maximum="2" Minimum="0.01"/>
+					<Slider x:Name="S_VecLen" Margin="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinWidth="100" ValueChanged="S_VecLen_ValueChanged"
+					 Maximum="2" Minimum="0.1" Value="1"/>
 				</StackPanel>
 			</Grid>
 		</Grid>

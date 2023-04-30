@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Schema;
 using Newtonsoft.Json.Linq;
+using MeshVisualizator;
 
 namespace MeshVisualizator
 {
@@ -152,76 +153,80 @@ namespace MeshVisualizator
       public float MaxValue { get => maxValue; set => maxValue = value; }
       public bool SetIsLogarithmic { set => isLogScale = value; }
       public float MinValue { get => minValue; set => minValue = value; }
+      public static ValueColorGradient Instance { get; } = new ValueColorGradient(@"../../../Palettes/default.spf");
 
-      public ValueColorGradient(Vector3 minimalColor, Vector3 maximumColor, bool isScaleLogarithmic = false)
-      {
-         colorKnots = new ObservableCollection<ColorKnot>() 
-            { new ColorKnot { Weight = 0f, ColorCode = ColorKnot.GetColorCodeByColorVector(minimalColor) },
-              new ColorKnot { Weight = 1f, ColorCode = ColorKnot.GetColorCodeByColorVector(maximumColor) }};
-         SetIsLogarithmic = isScaleLogarithmic;
-      }
-      public ValueColorGradient(string minimalColor, string maximumColor, bool isScaleLogarithmic = false)
-      {
-         if (!ColorKnot.IsStringAColor(minimalColor) || !ColorKnot.IsStringAColor(maximumColor))
-            throw new Exception("minimalColor or maximumColor does not satisfy rgb hex format");
-         colorKnots = new ObservableCollection<ColorKnot>()
-         { new ColorKnot { Weight = 0f, ColorCode = minimalColor },
-           new ColorKnot { Weight = 1f, ColorCode = maximumColor }};
+      //public ValueColorGradient(Vector3 minimalColor, Vector3 maximumColor, bool isScaleLogarithmic = false)
+      //{
+      //   colorKnots = new ObservableCollection<ColorKnot>() 
+      //      { new ColorKnot { Weight = 0f, ColorCode = ColorKnot.GetColorCodeByColorVector(minimalColor) },
+      //        new ColorKnot { Weight = 1f, ColorCode = ColorKnot.GetColorCodeByColorVector(maximumColor) }};
+      //   SetIsLogarithmic = isScaleLogarithmic;
+      //}
+      //public ValueColorGradient(string minimalColor, string maximumColor, bool isScaleLogarithmic = false)
+      //{
+      //   if (!ColorKnot.IsStringAColor(minimalColor) || !ColorKnot.IsStringAColor(maximumColor))
+      //      throw new Exception("minimalColor or maximumColor does not satisfy rgb hex format");
+      //   colorKnots = new ObservableCollection<ColorKnot>()
+      //   { new ColorKnot { Weight = 0f, ColorCode = minimalColor },
+      //     new ColorKnot { Weight = 1f, ColorCode = maximumColor }};
          
             
-         SetIsLogarithmic = isScaleLogarithmic;
-      }
-      public ValueColorGradient((Vector3 color, float w)[] Colors, float maxValue, float minValue, bool isScaleLogarithmic = false)
-      {
-         if (Colors.Where(x => x.w > 1f || x.w < 0f).ToArray().Length > 0)
-            throw new ArgumentException("Weight must be in [0, 1]");
-         colorKnots = new ObservableCollection<ColorKnot>();
-         foreach (var color in Colors)
-            colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w});
+      //   SetIsLogarithmic = isScaleLogarithmic;
+      //}
+      //public ValueColorGradient((Vector3 color, float w)[] Colors, float maxValue, float minValue, bool isScaleLogarithmic = false)
+      //{
+      //   if (Colors.Where(x => x.w > 1f || x.w < 0f).ToArray().Length > 0)
+      //      throw new ArgumentException("Weight must be in [0, 1]");
+      //   colorKnots = new ObservableCollection<ColorKnot>();
+      //   foreach (var color in Colors)
+      //      colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w});
 
-         MaxValue = maxValue;
-         MinValue = minValue;
-         SetIsLogarithmic = isScaleLogarithmic;
-         Sort();
-
-      }
-      public ValueColorGradient((Vector3 color, float w)[] Colors, bool isScaleLogarithmic = false)
-      {
-         if (Colors.Where(x => x.w > 1f || x.w < 0f).ToArray().Length > 0)
-            throw new ArgumentException("Weight must be in [0, 1]");
+      //   MaxValue = maxValue;
+      //   MinValue = minValue;
+      //   SetIsLogarithmic = isScaleLogarithmic;
+      //   Sort();
+      //}
+      //public ValueColorGradient((Vector3 color, float w)[] Colors, bool isScaleLogarithmic = false)
+      //{
+      //   if (Colors.Where(x => x.w > 1f || x.w < 0f).ToArray().Length > 0)
+      //      throw new ArgumentException("Weight must be in [0, 1]");
          
-         colorKnots = new ObservableCollection<ColorKnot>();
-         foreach (var color in Colors)
-            colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w });
+      //   colorKnots = new ObservableCollection<ColorKnot>();
+      //   foreach (var color in Colors)
+      //      colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color.color), Weight = color.w });
 
-         SetIsLogarithmic = isScaleLogarithmic;
-         Sort();
-      }
-      public ValueColorGradient(Vector3[] colors, bool isScaleLogarithmic = false)
+      //   SetIsLogarithmic = isScaleLogarithmic;
+      //   Sort();
+      //}
+      //public ValueColorGradient(bool isScaleLogarithmic = false)
+      //{
+      //   colorKnots = new ObservableCollection<ColorKnot>
+      //   {
+      //      new ColorKnot { ColorCode = "FFFFFF", Weight = 1f },
+      //      new ColorKnot { ColorCode = "000000", Weight = 0f },
+      //   };
+      //   Sort();
+      //}
+
+      private ValueColorGradient(string pallete_file)
       {
          colorKnots = new ObservableCollection<ColorKnot>();
-
-         int id = 0;
-         foreach (var color in colors)
-            colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color), Weight = (float)id++ / (colors.Length - 1f) });
-
-         SetIsLogarithmic = isScaleLogarithmic;
-         Sort();
-      }
-      public ValueColorGradient(bool isScaleLogarithmic = false)
-      {
-         colorKnots = new ObservableCollection<ColorKnot>
+         if (File.Exists(pallete_file))
          {
-            new ColorKnot { ColorCode = "FFFFFF", Weight = 1f },
-            new ColorKnot { ColorCode = "000000", Weight = 0f },
-         };
-         Sort();
-      }
+            SetPalette(pallete_file);
+         }
+         else
+         {
+            var colors = new[]{ new Vector3(0, 0, 1),
+                                 new Vector3(0, 1, 1),
+                                 new Vector3(1, 1, 0),
+                                 new Vector3(1, 0, 0)};
+            int id = 0;
+            foreach (var color in colors)
+               colorKnots.Add(new ColorKnot { ColorCode = ColorKnot.GetColorCodeByColorVector(color), Weight = (float)id++ / (colors.Length - 1f) });
 
-      public ValueColorGradient(string pallete_file)
-      {
-         colorKnots = new ObservableCollection<ColorKnot>();
-         SetPalette(pallete_file);
+            Sort();
+         }
       }
 
       public void AddColorKnot(Vector3 color, float weight) 
@@ -232,13 +237,12 @@ namespace MeshVisualizator
       }
       public Vector3 GetColorByValue(float value)
       {
-         if (value < minValue || value > maxValue)
-            return new Vector3(0f, 0f, 0f);
+         if (value < minValue)
+            return GetColorByWeight(0f);
+         if (value > maxValue)
+            return GetColorByWeight(1f);
 
-         float weight = isLogScale ?
-              (value - MinValue) / (MaxValue - MinValue)
-            : (value - MinValue) / (MaxValue - MinValue);
-         return GetColorByWeight(weight);
+         return GetColorByWeight(GetWeightByValue(value));
       }
       public float GetValueByWeight(float weight)
       {
@@ -320,10 +324,10 @@ namespace MeshVisualizator
             (colorKnots[i + 1].Weight, colorKnots[i].Weight) = (colorKnots[i].Weight, colorKnots[i + 1].Weight);
          Sort();
       }
-      public void SetPalette(string palette_file)
+      public bool SetPalette(string palette_file)
       {
          if (!File.Exists(palette_file))
-            return;
+            return false;
 
          using var palette_reader = new StreamReader(palette_file);
          if (!File.Exists(@"../../../Scale/Palette_schema.json"))
@@ -339,7 +343,7 @@ namespace MeshVisualizator
             if (!array.IsValid(schema))
             {
                MessageBox.Show($"File {palette_file} is corrupted!", "Error!", MessageBoxButton.OK);
-               return;
+               return false;
             }
 
             ColorKnot[] cks = new ColorKnot[array.Count];
@@ -357,8 +361,9 @@ namespace MeshVisualizator
          catch 
          {
             MessageBox.Show($"File {palette_file} is corrupted!", "Error!", MessageBoxButton.OK);
-            return;
+            return false;
          }
+         return true;
       }
 
       public void SavePalette(string palette_file)
@@ -372,6 +377,24 @@ namespace MeshVisualizator
          sb.Append("\n]");
 
          File.WriteAllText(palette_file, sb.ToString());
+      }
+
+      internal void MakeScaleTexture(ref float[] texPixels)
+      {
+         for (int i = 0; i < texPixels.Length / 3; i++)
+         {
+            Vector3 color = GetColorByWeight(i / (texPixels.Length / 3f - 1f));
+            texPixels[3 * i + 0] = color.X;
+            texPixels[3 * i + 1] = color.Y;
+            texPixels[3 * i + 2] = color.Z;
+         }
+      }
+
+      internal float GetWeightByValue(float value)
+      {
+         return isLogScale ?
+              (value - MinValue) / (MaxValue - MinValue)
+            : (value - MinValue) / (MaxValue - MinValue);
       }
    }
 }

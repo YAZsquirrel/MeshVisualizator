@@ -33,7 +33,7 @@ namespace MeshVisualizator
             GL.BufferData(BufferTarget.ArrayBuffer,
                           vertices.Length * sizeof(float),
                           vertices,
-                          BufferUsageHint.StaticDraw);
+                          BufferUsageHint.StreamDraw);
             GL.VertexAttribPointer(0,
                                    verts,
                                    VertexAttribPointerType.Float,
@@ -53,7 +53,7 @@ namespace MeshVisualizator
       } 
 
       public static float VectorLength { get; set; }
-      public static bool IsLengthConsistent { get; internal set; }
+      public static bool IsLengthConsistent { get; internal set; } = true;
       private float lineWidth = 2f;
 
       Arrow arrow;
@@ -63,70 +63,33 @@ namespace MeshVisualizator
       Matrix4[]? arrow_mats;
       private Vector3[]? colors;
 
-      public VectorMesh2D(string elemsfile, string knotsfile, string vectorfile, float width, float height, in ValueColorGradient vcg, in Camera2D? camera, ArrowType arrowType, MeshType meshType)
+      public VectorMesh2D(string elemsfile, string knotsfile, string resultfile, float width, float height, ArrowType arrowType, MeshType meshType)
          : base(width, height, meshType, new[] { @"Shaders/Vector mesh shaders/fragment.glsl", @"Shaders/Vector mesh shaders/vertex.glsl" }, 
-                                         new[] { ShaderType.FragmentShader, ShaderType.VertexShader }, camera)
+                                         new[] { ShaderType.FragmentShader, ShaderType.VertexShader })
       {
 
          arrow.arrowType = arrowType;
-         GetMeshData(elemsfile, knotsfile, vcg);
-         SetVectors(vectorfile, vcg);
+         GetMeshData(elemsfile, knotsfile, resultfile);
          ChangeArrowType(arrowType);
          SetBuffers();
       }
 
-      private void SetVectors(string vectorfile, ValueColorGradient vcg)
-      {
-         string[] number;
-         using (StreamReader sr = new StreamReader(vectorfile))
-         {
-            string s = sr.ReadToEnd().Replace('.', ',');
-            number = s.Split(new char[] { '\n', ' ', '\t', '\r' });
-         }
-
-         number = number.Where(w => w.Length > 0).ToArray();
-         List<Vector2D> vectors = new List<Vector2D>();
-         for (int i = 0; i < number.Length; i += 4)
-         {
-            vectors.Add(new Vector2D
-            {
-               Origin = new Vector2 { X = float.Parse(number[i]), Y = float.Parse(number[i + 1]) },
-               Direction = new Vector2 { X = float.Parse(number[i + 2]), Y = float.Parse(number[i + 3]) }
-            });
-         }
-
-         var orderedVectors = vectors.OrderBy(x => x.Length);
-         vcg.MaxValue = orderedVectors.Last().Length;
-         vcg.MinValue = orderedVectors.First().Length;
-
-
-         arrow_mats = new Matrix4[vectors.Count];
-
-         colors = new Vector3[vectors.Count];
-
-         for (int i = 0; i < vectors.Count; i++)
-         {
-            float len = IsLengthConsistent ? (vcg.MaxValue + vcg.MinValue) / 2f : vectors[i].Length;
-            arrow_mats[i] = Matrix4.CreateScale( len * VectorLength, len * VectorLength, 0)
-                          * Matrix4.CreateRotationZ(vectors[i].Angle)
-                          * Matrix4.CreateTranslation(new Vector3(vectors[i].Origin));
-
-            colors[i] = vcg.GetColorByValue(vectors[i].Length);
-         }
-
-      }
-
       PrimitiveType pt = PrimitiveType.Lines;
-      public override void Draw(Camera2D? camera)
+      public override void Draw()
       {
-         base.Draw(camera);
+         base.Draw();
+
+         Transform = Camera2D.Instance.GetTransformMatrix();
+         shader.UseShaders();
+         shader.SetMatrix4("projection", Projection);
+         shader.SetMatrix4("transform", Transform);
 
          GL.LineWidth(lineWidth);
          GL.BindVertexArray(arrow.VAO);
          GL.DrawElementsInstanced(pt, arrow.indeces.Length, DrawElementsType.UnsignedInt, IntPtr.Zero, arrow_mats.Length);
          GL.BindVertexArray(0);
       }
-      protected override void SetVertices(string knotsfile, in ValueColorGradient vcg)
+      protected override void SetVertices(string knotsfile)
       {
          string[] number;
          using (StreamReader sr = new StreamReader(knotsfile))
@@ -227,7 +190,7 @@ namespace MeshVisualizator
       {
          VBOcol = GL.GenBuffer();
          GL.BindBuffer(BufferTarget.ArrayBuffer, VBOcol);
-         GL.BufferData(BufferTarget.ArrayBuffer, colors.Length * 3 * sizeof(float), colors, BufferUsageHint.StaticDraw);
+         GL.BufferData(BufferTarget.ArrayBuffer, colors.Length * 3 * sizeof(float), colors, BufferUsageHint.StreamDraw);
 
          GL.BindVertexArray(arrow.VAO);
          GL.EnableVertexAttribArray(1);
@@ -237,7 +200,7 @@ namespace MeshVisualizator
 
          VBOmat = GL.GenBuffer();
          GL.BindBuffer(BufferTarget.ArrayBuffer, VBOmat);
-         GL.BufferData(BufferTarget.ArrayBuffer, arrow_mats.Length * 16 * sizeof(float), arrow_mats, BufferUsageHint.StaticDraw);
+         GL.BufferData(BufferTarget.ArrayBuffer, arrow_mats.Length * 16 * sizeof(float), arrow_mats, BufferUsageHint.StreamDraw);
          // vertex attributes
          int vec4Size = 4 * sizeof(float);
 
@@ -258,6 +221,45 @@ namespace MeshVisualizator
 
          GL.BindVertexArray(0);
          shader.UseShaders();
+      }
+      protected override void SetResults(string resultfile)
+      {
+         string[] number;
+         using (StreamReader sr = new StreamReader(resultfile))
+         {
+            string s = sr.ReadToEnd().Replace('.', ',');
+            number = s.Split(new char[] { '\n', ' ', '\t', '\r' });
+         }
+
+         number = number.Where(w => w.Length > 0).ToArray();
+         List<Vector2D> vectors = new List<Vector2D>();
+         for (int i = 0; i < number.Length; i += 4)
+         {
+            vectors.Add(new Vector2D
+            {
+               Origin = new Vector2 { X = float.Parse(number[i]), Y = float.Parse(number[i + 1]) },
+               Direction = new Vector2 { X = float.Parse(number[i + 2]), Y = float.Parse(number[i + 3]) }
+            });
+         }
+
+         ValueColorGradient vcg = ValueColorGradient.Instance;
+
+         var orderedVectors = vectors.OrderBy(x => x.Length);
+         vcg.MaxValue = orderedVectors.Last().Length;
+         vcg.MinValue = orderedVectors.First().Length;
+
+         arrow_mats = new Matrix4[vectors.Count];
+         colors = new Vector3[vectors.Count];
+
+         for (int i = 0; i < vectors.Count; i++)
+         {
+            float len = IsLengthConsistent ? (vcg.MaxValue + vcg.MinValue) / 2f : vectors[i].Length;
+            arrow_mats[i] = Matrix4.CreateScale(len * VectorLength, len * VectorLength, 0) *
+                            Matrix4.CreateRotationZ(vectors[i].Angle) *
+                            Matrix4.CreateTranslation(new Vector3(vectors[i].Origin));
+
+            colors[i] = vcg.GetColorByValue(vectors[i].Length);
+         }
       }
    }
 }

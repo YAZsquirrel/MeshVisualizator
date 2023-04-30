@@ -22,7 +22,7 @@ namespace MeshVisualizator
                                           .First(x => x.Weight == float.Parse(TBox_Weight.Text, CultureInfo.InvariantCulture) 
                                                    && x.ColorCode == TBox_ColorCode.Text));
          ParentWindow.DrawScale();
-         ParentWindow.DrawSolution();
+         ParentWindow.SetMesh();
       }
 
       private void B_MoveUp_Click(object sender, RoutedEventArgs e)
@@ -31,7 +31,7 @@ namespace MeshVisualizator
                                           .First(x => x.Weight == float.Parse(TBox_Weight.Text, CultureInfo.InvariantCulture)
                                                    && x.ColorCode == TBox_ColorCode.Text));
          ParentWindow?.DrawScale();
-         ParentWindow?.DrawSolution();
+         ParentWindow?.SetMesh();
       }
       
       private void B_MoveDown_Click(object sender, RoutedEventArgs e)
@@ -40,12 +40,12 @@ namespace MeshVisualizator
                                           .First(x => x.Weight == float.Parse(TBox_Weight.Text, CultureInfo.InvariantCulture)
                                                    && x.ColorCode == TBox_ColorCode.Text));
          ParentWindow?.DrawScale();
-         ParentWindow?.DrawSolution();
+         ParentWindow?.SetMesh();
       }
       private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
       {
          ParentWindow?.DrawScale();
-         ParentWindow?.DrawSolution();
+         ParentWindow?.SetMesh();
          if (Mouse.LeftButton == MouseButtonState.Released)
             ParentWindow?.vcg.Sort();
 
@@ -64,7 +64,7 @@ namespace MeshVisualizator
       private void TBox_ColorCode_LostFocus(object sender, RoutedEventArgs e)
       {
          ParentWindow?.DrawScale();
-         ParentWindow?.DrawSolution();
+         ParentWindow?.SetMesh();
       }
    }
 }
