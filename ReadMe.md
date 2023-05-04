@@ -56,10 +56,10 @@ Input your files in these labels (via drag'n'drop or by menu).
         > **Format:** p0 p1 p2 p3   
         > Where [p0, p1, p2, p3] are global numbers of vertecies of Ne-th quadrilateral element:
 
-         p2---p3 
-         |    |
-         |    |
-         p0---p1
+          p2---p3 
+          |    |
+          |    |
+          p0---p1
         #### **Example:**    
         >  0 1 2 3    
 
